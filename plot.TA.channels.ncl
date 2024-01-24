@@ -36,9 +36,12 @@ TA@lon2d=lon
 LZA@lat2d=lat
 LZA@lon2d=lon
 
+cosine=LZA
+cosine=cos(LZA*3.14/180.)
+
 plot=new(3,graphic)
 wks:=gsn_open_wks("png", "TA"+sprinti("%0.2i",ch)+"_PJ"+sprinti("%0.2i",pj))
-gsn_define_colormap(wks, "NCV_jet")
+gsn_define_colormap(wks, "CET-D01A")
 res=True
 res@gsnFrame=False
 res@gsnDraw=False
@@ -56,6 +59,7 @@ res@pmLabelBarWidthF=0.12
 
 res@lbLabelAutoStride=False
 res@lbLabelStride=4
+if(ch.eq.6) then res@lbLabelStride=10 end if
 ; res@pmLabelBarHeightF=0.1
 ; res@pmLabelBarWidthF=0.55
 res@lbTitleOn=False
@@ -86,14 +90,15 @@ res@mpTopAngleF= 20
 res@mpLandFillColor="transparent"
 res@mpGeophysicalLineColor="transparent"
 
-maxmaps=(/880.,475.,340.,255.,200.,145./)
-minmaps=(/700.,400.,320.,230.,180.,137./)
-intermaps=(/5.,2.,0.5,0.5,0.5,0.2/)
+maxmaps=(/880.,470.,340.,253.,198.,144./)
+minmaps=(/720.,410.,320.,227.,182.,138./)
+intermaps=(/5.,2.,0.5,0.5,0.5,0.1/)
+
+minus=(/800,440,320,240,190,141/)
 
 
-
-maxlev=maxmaps(ch-1)
-minlev=minmaps(ch-1)
+maxlev=maxmaps(ch-1)-minus(ch-1)
+minlev=minmaps(ch-1)-minus(ch-1)
 lintrv=intermaps(ch-1)
 
 ;; antenna temp
@@ -102,24 +107,31 @@ res@cnMaxLevelValF=maxlev
 res@cnMinLevelValF=minlev
 res@cnLevelSpacingF=lintrv
 
+res@trGridType= "TriangularMesh"
 
 res@cnMissingValFillColor="white"
 res@gsnLeftString=""  
-res@gsnRightString=""  
-res@gsnCenterString="Antenna Temperature  (K)" 
+
+res@gsnLeftString="TA anomaly (K)" 
+res@gsnRightString="ref: ~F8~m" +"=0.8"
+
 res@lbTitleString="Antenna Temperature (K)" 
-plot(0)=gsn_csm_contour_map(wks, TA, res)
-
+TM=TA
+TM=TA-minus(ch-1)
+plot(0)=gsn_csm_contour_map(wks, TM, res)
+res@gsnRightString=""  
 ;;; emission angle
-res@cnLevelSelectionMode="ManualLevels"
-res@cnMinLevelValF=0.
-res@cnMaxLevelValF=90.
-res@cnLevelSpacingF=5.
-
+; res@cnLevelSelectionMode="AutomaticLevels"
+res@cnMinLevelValF=0.05
+res@cnMaxLevelValF=0.95
+res@cnLevelSpacingF=0.05
 res@lbLabelStride=2
-res@gsnCenterString="Emission angle (~S~o~N~)"  
-res@lbTitleString="Emission angle (~S~o~N~)"
-plot(1)=gsn_csm_contour_map(wks, LZA, res)
+
+
+res@cnFillPalette=read_colormap_file("CET-L04")
+res@gsnLeftString="~F8~m"  
+res@lbTitleString="~F8~m"
+plot(1)=gsn_csm_contour_map(wks, cosine, res)
 
 
 ;; grid label
@@ -171,10 +183,10 @@ ta1d:=ta1d(index)
 plot(2)=gsn_csm_xy(wks,miu,ta1d,resxy)
 
 
-cmap=gsn_retrieve_colormap(wks)
 
-nlevel=toint((maxlev-minlev)/lintrv)+1
-levels=fspan(minlev,maxlev,nlevel)
+
+nlevel=toint((maxmaps(ch-1)-minmaps(ch-1))/lintrv)+1
+levels=fspan(minmaps(ch-1),maxmaps(ch-1),nlevel)
 
 plm=new(nlevel+1,graphic)
 
@@ -204,7 +216,9 @@ if(ismissing(index(0))) then continue end if
     y:= ta1d(index)
     x:= miu(index)
 
-    icol = get_color_index("NCV_jet",levels,half)
+    icol = get_color_index("CET-D01A",levels,half)
+    ; cmap=read_colormap_file("NCV_jet")
+    cmap=gsn_retrieve_colormap(wks)
     ; print(icol)
     gsres@gsMarkerColor=cmap(icol,:)
 
