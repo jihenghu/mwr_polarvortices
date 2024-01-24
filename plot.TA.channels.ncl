@@ -187,19 +187,20 @@ plot(2)=gsn_csm_xy(wks,miu,ta1d,resxy)
 
 nlevel=toint((maxmaps(ch-1)-minmaps(ch-1))/lintrv)+1
 levels=fspan(minmaps(ch-1),maxmaps(ch-1),nlevel)
-
 plm=new(nlevel+1,graphic)
 
 gsres=True
 gsres@gsMarkerIndex=1
+
+; cmap=read_colormap_file("NCV_jet")
+cmap=gsn_retrieve_colormap(wks)
+
 do ilevel=0,nlevel
-
-
     if (ilevel.eq.0) then
         index:=ind(ta1d.ge.10 .and. ta1d.lt.levels(0))
-        half=0.5*(10+levels(0))
-        
-    end if    
+        half=0.5*(10+levels(0))      
+    end if 
+
     if (ilevel.eq.nlevel) then 
         index:=ind(ta1d.ge.levels(nlevel-1))
         ; half=levels(nlevel-1)+20
@@ -211,27 +212,22 @@ do ilevel=0,nlevel
         index:=ind(ta1d.ge.levels(ilevel-1) .and. ta1d.lt.levels(ilevel))
         half=0.5*(levels(ilevel-1) +levels(ilevel))
     end if
-if(ismissing(index(0))) then continue end if
+
+    if(ismissing(index(0))) then continue end if
 
     y:= ta1d(index)
     x:= miu(index)
-
     icol = get_color_index("CET-D01A",levels,half)
-    ; cmap=read_colormap_file("NCV_jet")
-    cmap=gsn_retrieve_colormap(wks)
-    ; print(icol)
-    gsres@gsMarkerColor=cmap(icol,:)
 
+    gsres@gsMarkerColor=cmap(icol,:)
     plm(ilevel)=gsn_add_polymarker(wks,plot(2),x,y,gsres)
 end do
-
 
 resP=True
 resP@gsnPanelMainString="Perijove "+sprinti("%0.2i",pj) + " Channel "+sprinti("%0.2i",ch)
 resP@gsnPanelMainFontHeightF=0.01
 resP@gsnPanelTop=1.
 resP@gsnPanelYWhiteSpacePercent=2
-
 
 gsn_panel(wks,plot,(/3,1/),resP)
 
