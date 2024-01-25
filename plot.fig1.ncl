@@ -14,25 +14,16 @@ res@cnLinesOn = False
 res@cnLineLabelsOn = False
 res@lbBoxLinesOn                = False
 res@lbLabelBarOn                = False ;True
-; res@lbBoxEndCapStyle="TriangleBothEnds"
-res@lbOrientation="vertical"
-res@pmLabelBarHeightF=0.6
-res@pmLabelBarWidthF=0.12
-
-
-res@lbLabelAutoStride=False
-res@lbLabelStride=4
-
-res@lbTitleOn=False
 
 res@gsnAddCyclic=False
 
+;;; MAPS
 res@mpFillOn=True
 ;; north polar
 res@mpGridPolarLonSpacingF=15.
 res@mpGridAndLimbOn=True
-res@mpGridLatSpacingF=5
-res@mpGridLonSpacingF=15
+; res@mpGridLatSpacingF=5
+; res@mpGridLonSpacingF=15
 
 res@mpGridLineDashPattern=2
 
@@ -105,7 +96,6 @@ do pj=51,54
     cosine:=LZA
     cosine=cos(LZA*3.14/180.)
 
-
 ;; antenna temp
     maxlev=maxmaps(ch-1)-minus(ch-1)
     minlev=minmaps(ch-1)-minus(ch-1)
@@ -120,10 +110,6 @@ do pj=51,54
 
     if(ch.eq.6) then res@lbLabelStride=10 end if
     res@cnFillPalette=read_colormap_file("CET-D01A")
-
-    ; res@gsnLeftString="TA' Channel "+ch 
-    ; res@gsnRightString="ref: ~F8~m" +"=0.8"
-
 
     TM:=TA
     TM=TA-minus(ch-1)
@@ -161,7 +147,6 @@ do pj=51,54
     ; tmlon3((pj-51)*4+(ch-4))=gsn_add_text(wks, plot((pj-51)*4+(ch-4)), "180~S~o~N~E", 180, 72, resmk)
     ; tmlon4((pj-51)*4+(ch-4))=gsn_add_text(wks, plot((pj-51)*4+(ch-4)), "90~S~o~N~W", -90, 74, resmk)
 
-
 ;;; emission angle
     res@cnLevelSelectionMode="ExplicitLevels"
     res@cnLevels=(/0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0/)
@@ -172,7 +157,7 @@ do pj=51,54
 
     plot((pj-51)*4+3)=gsn_csm_contour_map(wks, cosine, res)
   
-     pm=plot(3)
+    pm=plot(3)
     getvalues pm@contour
         "cnLevels"               : levels_mu
         "cnFillColors"           : colors_mu
@@ -189,7 +174,6 @@ do pj=51,54
 
     end do   
 end do   
-
 
 ; manually add Row titles  
     Ytires=True
@@ -226,19 +210,19 @@ end do
     lbres@lbTitleString="TA~S~`~N~ (K)"
     lbres@lbTitleFontHeightF=0.014
     lbres@lbLabelAlignment="InteriorEdges"
+    ;; ----------------------
     lbres@lbFillColors         = colors_ch4      ; must be RGB triplets
     labels                     = "" + levels_ch4    
     gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.063,0.0475,lbres)
-
+    ;; ----------------------
     lbres@lbFillColors         := colors_ch5      ; must be RGB triplets
     labels                     := "" + levels_ch5    
     gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.291,0.05,lbres)
+    ;; ----------------------
     lbres@lbFillColors         := colors_ch6      ; must be RGB triplets
     labels                     := "" + levels_ch6    
     gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.517,0.05,lbres)
-
-
-
+     ;; ----------------------
     lbres@lbTitleString="~F8~m"
     lbres@lbTitleFontThicknessF=3
     lbres@lbFillColors         := colors_mu(1:)      ; must be RGB triplets
@@ -255,12 +239,7 @@ end do
     resP@gsnPanelBottom=0.07
     resP@gsnPanelLeft=0.03
 
-
     ; drawNDCGrid(wks)
-
-gsn_panel(wks,plot,(/4,4/),resP)
-
-
-
+    gsn_panel(wks,plot,(/4,4/),resP)
 
 end
