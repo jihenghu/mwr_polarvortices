@@ -22,8 +22,8 @@ res@mpFillOn=True
 ;; north polar
 res@mpGridPolarLonSpacingF=15.
 res@mpGridAndLimbOn=True
-; res@mpGridLatSpacingF=5
-; res@mpGridLonSpacingF=15
+res@mpGridLatSpacingF=5
+res@mpGridLonSpacingF=15
 
 res@mpGridLineDashPattern=2
 
