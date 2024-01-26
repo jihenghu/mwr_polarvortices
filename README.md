@@ -21,7 +21,7 @@ You can run the NCL script solely, if you already have the historcial H5 files o
 > ncl -Q plot.TA.channels.ncl ch=5 pj=51
 ```
 
-## Panels plots
+## Panel plots
 To plot all perjoves in a single panel:
 ```bash
 > ncl -Q plot.fig1.ncl

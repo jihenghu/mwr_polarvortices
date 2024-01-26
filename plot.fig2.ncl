@@ -1,6 +1,5 @@
 begin
-wks=gsn_open_wks("png", "fig2")
-; gsn_define_colormap(wks, "CET-D01A")
+
 res=True
 res@gsnFrame=False
 res@gsnDraw=False
@@ -22,7 +21,7 @@ res@mpGridAndLimbOn=True
 res@mpGridLatSpacingF=5
 res@mpGridLonSpacingF=15
 
-res@mpGridLineDashPattern=2
+res@mpGridLineDashPattern=14
 
 res@mpProjection      = "LambertEqualArea"
 res@mpCenterLatF      = 90
@@ -44,15 +43,15 @@ res@gsnLeftString=""
 res@gsnRightString=""  
 
 resmk=True
-resmk@txFontColor="FireBrick4"
+resmk@txFontColor="Black"
 resmk@txFontHeightF=0.025
 resmk@txFontThicknessF=3
 
-maxmaps=(/880.,470.,340.,253.,198.,144./)
-minmaps=(/720.,410.,320.,227.,182.,138./)
-intermaps=(/5.,2.,1.,1.,1.,0.5/)
+maxmaps=(/880.,470.,338.,253.,198.,144./)
+minmaps=(/760.,410.,314.,229.,182.,136./)
+intermaps=(/10.,5.,2.,2.,1.,0.5/)
 
-minus=(/800,440,330,240,190,141/)
+minus=(/820,440,326,241,190,140/)
 
 plot=new(16,graphic)
 tmlat1=new(16,graphic)
@@ -62,6 +61,28 @@ tmlon2=new(16,graphic)
 tmlon3=new(16,graphic)
 tmlon4=new(16,graphic)
 
+PanelFigureStringsBackgroundFillColor="Transparent"
+mucapthick=3
+
+
+;; ------------------- PNG -----------------------------------
+; wks=gsn_open_wks("png", "fig2")
+
+
+;;;; ----------------- PDF ----------------------------------------
+; wks=gsn_open_wks("pdf", "fig2")
+; PanelFigureStringsBackgroundFillColor="white"
+; mucapthick=1
+
+;;; ----------------- Black Background ----------------------------------------
+wks=gsn_open_wks("png", "fig2-Dark")
+setvalues wks
+"wkForegroundColor" : (/1.,1.,1./)  ; white
+"wkBackgroundColor" : (/0.,0.,0./)  ; black
+end setvalues
+resmk@txFontColor="white"
+
+;;;; plot-->>>
 do pj=51,54
    do ch=1,3
 
@@ -107,6 +128,7 @@ do pj=51,54
 
     if(ch.eq.6) then res@lbLabelStride=10 end if
     res@cnFillPalette=read_colormap_file("CET-D01A")
+;  res@cnFillPalette:=read_colormap_file("BlueDarkRed18")
 
     TM:=TA
     TM=TA-minus(ch-1)
@@ -149,7 +171,7 @@ do pj=51,54
     res@cnLevels=(/0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0/)
     res@cnLevelSpacingF=0.05
     res@lbLabelStride=2
-    res@cnFillPalette=read_colormap_file("CET-L04")
+    res@cnFillPalette:=read_colormap_file("CET-L04")
     ; res@cnLabelBarEndStyle="ExcludeOuterBoxes"
 
     plot((pj-51)*4+3)=gsn_csm_contour_map(wks, cosine, res)
@@ -187,11 +209,17 @@ end do
     Xtires@txFontHeightF=0.016
     Xtires@txAngleF=0.
 
-    gsn_text_ndc(wks, "Channel 1", 0.18, 0.985, Xtires)
-    gsn_text_ndc(wks, "Channel 2", 0.40, 0.985, Xtires)
-    gsn_text_ndc(wks, "Channel 3", 0.63, 0.985, Xtires)
-    Xtires@txFontThicknessF=3
-    gsn_text_ndc(wks, "~F8~m~F21~ (Channel 2,3)", 0.85, 0.985, Xtires)
+    gsn_text_ndc(wks, "0.6 GHz", 0.18, 0.985, Xtires)
+    gsn_text_ndc(wks, "1.25 GHz", 0.41, 0.985, Xtires)
+    gsn_text_ndc(wks, "2.6 GHz", 0.63, 0.985, Xtires)
+    Xtires@txFontHeightF=0.012
+    gsn_text_ndc(wks, minus(0)+"K", 0.18+0.08, 0.984, Xtires)
+    gsn_text_ndc(wks, minus(1)+"K", 0.41+0.075, 0.984, Xtires)
+    gsn_text_ndc(wks, minus(2)+"K", 0.63+0.08, 0.984, Xtires)
+
+    Xtires@txFontHeightF=0.016
+    Xtires@txFontThicknessF=mucapthick
+    gsn_text_ndc(wks, "~F8~m~F21~ (1.25/2.6 GHz)", 0.85, 0.985, Xtires)
 
 ;; manually ColorBars 
     lbres = True
@@ -204,24 +232,24 @@ end do
     lbres@lbBoxLinesOn=False
     lbres@lbMonoFillPattern    = True                ; fill sold
     lbres@lbTitleOn=True
-    lbres@lbTitleString="TA~S~`~N~ (K)"
+    lbres@lbTitleString="T~B~a~N~~S~'~N~ (K)"
     lbres@lbTitleFontHeightF=0.014
     lbres@lbLabelAlignment="InteriorEdges"
     ;; ----------------------
     lbres@lbFillColors         = colors_ch1      ; must be RGB triplets
     labels                     = "" + levels_ch1    
-    gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.063,0.048,lbres)
+    gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.063,0.05,lbres)
     ;; ----------------------
     lbres@lbFillColors         := colors_ch2      ; must be RGB triplets
     labels                     := "" + levels_ch2    
-    gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.289,0.0475,lbres)
+    gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.289,0.05,lbres)
     ;; ----------------------
     lbres@lbFillColors         := colors_ch3      ; must be RGB triplets
     labels                     := "" + levels_ch3    
     gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.517,0.05,lbres)
      ;; ----------------------
     lbres@lbTitleString="~F8~m"
-    lbres@lbTitleFontThicknessF=3
+    lbres@lbTitleFontThicknessF=mucapthick
     lbres@lbFillColors         := colors_mu(1:)      ; must be RGB triplets
     lbres@lbLabelAlignment="ExternalEdges"
     lbres@lbBoxEndCapStyle="RectangleEnds"
@@ -230,13 +258,19 @@ end do
     gsn_labelbar_ndc (wks,dimsizes(labels)-1,labels,0.743,0.05,lbres)
 
 ;; Panels 
-    resP=True
-    resP@gsnPanelMainFontHeightF=0.01
-    resP@gsnPanelTop=0.97
-    resP@gsnPanelBottom=0.07
-    resP@gsnPanelLeft=0.03
+resP=True
+resP@gsnPanelMainFontHeightF=0.01
+resP@gsnPanelTop=0.97
+resP@gsnPanelBottom=0.07
+resP@gsnPanelLeft=0.03
 
-    ; drawNDCGrid(wks)
-    gsn_panel(wks,plot,(/4,4/),resP)
+resP@gsnPanelFigureStrings=(/"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P"/)
+resP@gsnPanelFigureStringsBackgroundFillColor=PanelFigureStringsBackgroundFillColor
+
+resP@gsnPanelFigureStringsPerimOn=False
+resP@gsnPanelFigureStringsJust="TopRight"
+
+; drawNDCGrid(wks)
+gsn_panel(wks,plot,(/4,4/),resP)
 
 end
