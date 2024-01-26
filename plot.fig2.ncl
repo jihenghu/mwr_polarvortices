@@ -66,7 +66,7 @@ mucapthick=3
 
 
 ;; ------------------- PNG -----------------------------------
-; wks=gsn_open_wks("png", "fig2")
+wks=gsn_open_wks("png", "fig2")
 
 
 ;;;; ----------------- PDF ----------------------------------------
@@ -75,12 +75,12 @@ mucapthick=3
 ; mucapthick=1
 
 ;;; ----------------- Black Background ----------------------------------------
-wks=gsn_open_wks("png", "fig2-Dark")
-setvalues wks
-"wkForegroundColor" : (/1.,1.,1./)  ; white
-"wkBackgroundColor" : (/0.,0.,0./)  ; black
-end setvalues
-resmk@txFontColor="white"
+; wks=gsn_open_wks("png", "fig2-Dark")
+; setvalues wks
+; "wkForegroundColor" : (/1.,1.,1./)  ; white
+; "wkBackgroundColor" : (/0.,0.,0./)  ; black
+; end setvalues
+; resmk@txFontColor="white"
 
 ;;;; plot-->>>
 do pj=51,54
