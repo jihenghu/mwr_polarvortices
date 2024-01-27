@@ -48,18 +48,20 @@ wks=gsn_open_wks("png", "fig3")
 
 ;;;; plot-->>>
 plot=new(20,graphic)
+plreg=new(20,graphic)
+plreg1=new(20,graphic)
+
+pltxtc1=new(20,graphic)
+
 latlevels=(/70,72,74,76,78,80,82,84,86,88,90/)
 VALUE=      (/71,73,75,77,79,81,83,85,87,89/)
 nlevel=dimsizes(VALUE)
 
+plm=new(4*5*(nlevel),graphic)
+cmap=read_colormap_file("CET-L04")
 
 Ymax=(/500,360,270,210,150/)
 Ymin=(/160,120,90,70,60/)
-
-plm=new(4*5*(nlevel),graphic)
-cmap=read_colormap_file("CET-L04")
-; cmap=read_colormap_file("NCV_jet")
-
 im=0
 
 do pj=51,54
@@ -107,12 +109,10 @@ do pj=51,54
 
     plot((pj-51)*5+ch-2)=gsn_csm_xy(wks,miu,ta1d,resxy)
 
+    ;;-----------------------------------------------------------------------------------
+    ;; plot markers in leveled colors
     gsres=True
     gsres@gsMarkerIndex=1
-    ; gsres@gsMarkerOpacityF=0.3
-
-;   draw_color_palette(wks, cmap, 0)
-
     do ilevel=0,nlevel-1
         index:=ind(lat1d.gt.latlevels(ilevel) .and. lat1d.le.latlevels(ilevel+1))
    
@@ -125,6 +125,38 @@ do pj=51,54
         plm(im)=gsn_add_polymarker(wks,plot((pj-51)*5+ch-2),x,y,gsres)
         im=im+1
     end do
+
+    ;;-----------------------------------------------------------------------------------
+    ;; linear fits between 1~0.6
+        miufit:=miu(ind(miu.gt.0.6))
+        tafit:=ta1d(ind(miu.gt.0.6))
+        reg=regline_stats(miufit, tafit)
+        print(reg)
+        intercept=reg@yintercept
+        RSE=reg@RSE
+        regres=True
+        regres@gsLineColor="Blue"
+        regres@gsLineThicknessF=3
+        regres@gsLineDashPattern=0
+        plreg((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/0,1/), (/intercept,reg+intercept/), regres)
+
+        regres@gsLineColor="black"
+        regres@gsLineDashPattern=2       
+        regres@gsLineThicknessF=2    
+        plreg1((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/0.6,0.6/), (/0.,reg*0.6+intercept/), regres)
+    ;;--------------------------------------------------------------------------------------------------------------------- 
+    ;; report c1
+        tcres=True
+        tcres@txFontColor="black"
+
+        c0=reg+intercept
+        c1=c0-(reg*0.8+intercept)
+        textc1="c~H-13V2F35~D~FV-2H3~~B~1~N~ = "+ sprintf("%4.1f", c1)+" ~F34~1~F21~ "+ sprintf("%3.1f", RSE)+" K"
+        ; textc1=sprintf("%6.1f", c0)
+        pltxtc1((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc1, 0.4,c0 , tcres) 
+
+
+
 end do
 end do
 
@@ -149,12 +181,11 @@ end do
     gsn_text_ndc(wks, "22 GHz", 0.91, 0.815, Xtires)
 
     Xtires@txFontThicknessF=mucapthick
-    gsn_text_ndc(wks, "~F8~m~F21~", 0.15, 0.185, Xtires)
-    gsn_text_ndc(wks, "~F8~m~F21~", 0.34, 0.185, Xtires)
-    gsn_text_ndc(wks, "~F8~m~F21~", 0.53, 0.185, Xtires)
-    gsn_text_ndc(wks, "~F8~m~F21~", 0.72, 0.185, Xtires)
-    gsn_text_ndc(wks, "~F8~m~F21~", 0.91, 0.185, Xtires)
-
+    gsn_text_ndc(wks, "~F8~m~F21~", 0.145, 0.185, Xtires)
+    gsn_text_ndc(wks, "~F8~m~F21~", 0.341, 0.185, Xtires)
+    gsn_text_ndc(wks, "~F8~m~F21~", 0.532, 0.185, Xtires)
+    gsn_text_ndc(wks, "~F8~m~F21~", 0.725, 0.185, Xtires)
+    gsn_text_ndc(wks, "~F8~m~F21~", 0.915, 0.185, Xtires)
 
     ;; manually ColorBars 
     lbres = True
@@ -185,19 +216,20 @@ end do
 
 ;; Panels 
     resP=True
-    resP@gsnPanelMainFontHeightF=0.01
+    ; resP@gsnPanelMainFontHeightF=0.01
     ; resP@gsnPanelTop=0.97
     ; resP@gsnPanelBottom=0.07
     resP@gsnPanelLeft=0.035
 
     resP@gsnPanelFigureStrings=(/"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T"/)
+    resP@gsnPanelFigureStringsFontHeightF=0.015
     resP@gsnPanelFigureStringsBackgroundFillColor=PanelFigureStringsBackgroundFillColor
     resP@gsnPanelYWhiteSpacePercent=2
     resP@gsnPanelFigureStringsPerimOn=False
     resP@gsnPanelFigureStringsJust="BottomLeft"
 
 
-    drawNDCGrid(wks)
+    ; drawNDCGrid(wks)
     gsn_panel(wks,plot,(/4,5/),resP)
 
 end
