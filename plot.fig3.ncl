@@ -133,10 +133,10 @@ end do
     Ytires@txFontHeightF=0.014
     Ytires@txAngleF=90.
 
-    gsn_text_ndc(wks, "PJ51 T~B~a~N~~S~'~N~ (K)", 0.015, 0.735, Ytires)
-    gsn_text_ndc(wks, "PJ52 T~B~a~N~~S~'~N~ (K)", 0.015, 0.585, Ytires)
-    gsn_text_ndc(wks, "PJ53 T~B~a~N~~S~'~N~ (K)", 0.015, 0.435, Ytires)
-    gsn_text_ndc(wks, "PJ54 T~B~a~N~~S~'~N~ (K)", 0.015, 0.285, Ytires)
+    gsn_text_ndc(wks, "PJ51 T~B~a~N~ (K)", 0.015, 0.735, Ytires)
+    gsn_text_ndc(wks, "PJ52 T~B~a~N~ (K)", 0.015, 0.585, Ytires)
+    gsn_text_ndc(wks, "PJ53 T~B~a~N~ (K)", 0.015, 0.435, Ytires)
+    gsn_text_ndc(wks, "PJ54 T~B~a~N~ (K)", 0.015, 0.285, Ytires)
 
     Xtires=True
     Xtires@txFontHeightF=0.014
