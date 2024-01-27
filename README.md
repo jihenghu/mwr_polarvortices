@@ -26,4 +26,5 @@ To plot all perjoves in a single panel:
 ```bash
 > ncl -Q plot.fig1.ncl
 > ncl -Q plot.fig2.ncl
+> ncl -Q plot.fig3.ncl
 ```
