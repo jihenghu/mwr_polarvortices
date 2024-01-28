@@ -52,6 +52,7 @@ plreg=new(20,graphic)
 plreg1=new(20,graphic)
 
 pltxtc1=new(20,graphic)
+pltxtc0=new(20,graphic)
 
 latlevels=(/70,72,74,76,78,80,82,84,86,88,90/)
 VALUE=      (/71,73,75,77,79,81,83,85,87,89/)
@@ -131,7 +132,7 @@ do pj=51,54
         miufit:=miu(ind(miu.gt.0.6))
         tafit:=ta1d(ind(miu.gt.0.6))
         reg=regline_stats(miufit, tafit)
-        print(reg)
+        ; print(reg)
         intercept=reg@yintercept
         RSE=reg@RSE
         regres=True
@@ -148,12 +149,20 @@ do pj=51,54
     ;; report c1
         tcres=True
         tcres@txFontColor="black"
+        tcres@txFontHeightF=0.045
+
+        xpos=0.6
+        ypos0=   (Ymax(ch-2)-Ymin(ch-2))*0.2+Ymin(ch-2)
+        ypos1=   (Ymax(ch-2)-Ymin(ch-2))*0.08+Ymin(ch-2)
+      
 
         c0=reg+intercept
         c1=c0-(reg*0.8+intercept)
-        textc1="c~H-13V2F35~D~FV-2H3~~B~1~N~ = "+ sprintf("%4.1f", c1)+" ~F34~1~F21~ "+ sprintf("%3.1f", RSE)+" K"
-        ; textc1=sprintf("%6.1f", c0)
-        pltxtc1((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc1, 0.4,c0 , tcres) 
+        textc1="c~H-13V2F35~D~FV-2H3~~B~1~N~ = "+ sprintf("%6.1f", c1)+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
+        textc0="c~H-13V2F35~D~FV-2H3~~B~0~N~ = "+ sprintf("%5.1f", c0)+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
+
+        pltxtc1((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc0,xpos,ypos0 , tcres) 
+        pltxtc0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc1,xpos,ypos1 , tcres) 
 
 
 
@@ -226,7 +235,7 @@ end do
     resP@gsnPanelFigureStringsBackgroundFillColor=PanelFigureStringsBackgroundFillColor
     resP@gsnPanelYWhiteSpacePercent=2
     resP@gsnPanelFigureStringsPerimOn=False
-    resP@gsnPanelFigureStringsJust="BottomLeft"
+    resP@gsnPanelFigureStringsJust="TopRight"
 
 
     ; drawNDCGrid(wks)
