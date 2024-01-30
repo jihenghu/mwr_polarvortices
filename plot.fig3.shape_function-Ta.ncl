@@ -2,6 +2,7 @@
 ; this script is aimed at ploting a curve of Ta versus cosine of emission angle
 ; linear regression of Ta between 1-0.6
 ; report c0, c1 
+; use a piecewise logistic function to regress the shape function
 
 begin
 
@@ -27,31 +28,32 @@ resxy@tmYLLabelStride=2
 
 PanelFigureStringsBackgroundFillColor="Transparent"
 mucapthick=3
-regessline_thick=3
+regessline_thick=4
 txFontColor="Black"
-
+FontThickness=2
 ;; ------------------- PNG -----------------------------------
-; wks=gsn_open_wks("png", "fig3")
+wks=gsn_open_wks("png", "fig3-shapefuction-Ta")
 
 ;;;; ----------------- PDF ----------------------------------------
-; wks=gsn_open_wks("pdf", "fig3")
+; wks=gsn_open_wks("pdf", "fig3-LOG")
 ; mucapthick=1
 ; regessline_thick=2
+; FontThickness=1
 
 ;;;; ----------------- Black Background ----------------------------------------
-wks=gsn_open_wks("png", "fig3-Dark")
-setvalues wks
-"wkForegroundColor" : (/1.,1.,1./)  ; white
-"wkBackgroundColor" : (/0.,0.,0./)  ; black
-end setvalues
-txFontColor="white"
-; resxy@tmXMajorGrid=True
-; resxy@tmYMajorGrid=True
-resxy@tmYMajorGridThicknessF=1
-resxy@tmXMajorGridThicknessF=1
-resxy@tmYMajorGridLineDashPattern=2
-resxy@tmXMajorGridLineDashPattern=2
-resxy@tmGridDrawOrder="PreDraw"
+; wks=gsn_open_wks("png", "fig3-LOG-Dark")
+; setvalues wks
+; "wkForegroundColor" : (/1.,1.,1./)  ; white
+; "wkBackgroundColor" : (/0.,0.,0./)  ; black
+; end setvalues
+; txFontColor="white"
+; ; resxy@tmXMajorGrid=True
+; ; resxy@tmYMajorGrid=True
+; resxy@tmYMajorGridThicknessF=1
+; resxy@tmXMajorGridThicknessF=1
+; resxy@tmYMajorGridLineDashPattern=2
+; resxy@tmXMajorGridLineDashPattern=2
+; resxy@tmGridDrawOrder="PreDraw"
 
 
 
@@ -60,9 +62,14 @@ resxy@tmGridDrawOrder="PreDraw"
 plot=new(20,graphic)
 plreg=new(20,graphic)
 plreg1=new(20,graphic)
+pltlogi=new(20,graphic)
 
 pltxtc1=new(20,graphic)
 pltxtc0=new(20,graphic)
+pltxta0=new(20,graphic)
+pltxtb0=new(20,graphic)
+
+
 
 latlevels=(/70,72,74,76,78,80,82,84,86,88,90/)
 VALUE=      (/71,73,75,77,79,81,83,85,87,89/)
@@ -74,6 +81,9 @@ cmap=read_colormap_file("CET-L04")
 Ymax=(/500,360,270,210,150/)
 Ymin=(/160,120,90,70,60/)
 im=0
+
+
+intersect=0.6
 
 do pj=51,54
    do ch=2,6
@@ -93,7 +103,7 @@ do pj=51,54
     lat@units="degree_north"
     lon@units="degree_east"
 
-    lon=where(lon.eq."nan".or.lat.eq."nan".or.TA.lt.5,lon@_FillValue,lon)
+    lon=where(lon.eq."nan".or.lat.eq."nan".or.TA.eq."nan",lon@_FillValue,lon)
     lat=where(ismissing(lon),lat@_FillValue,lat)
     TA=where(ismissing(lon),TA@_FillValue,TA)
     LZA=where(ismissing(lon),LZA@_FillValue,LZA)
@@ -114,9 +124,21 @@ do pj=51,54
     lat1d:=lat1d(index)
     miu:=cos(incident(index)*3.14159265/180.)
     ta1d:=ta1d(index)
+ 
     
-    resxy@trYMaxF=Ymax(ch-2)
-    resxy@trYMinF=Ymin(ch-2)
+    ;;-----------------------------------------------------------------------------------
+    ;; linear fits between 1~0.6
+    miufit:=miu(ind(miu.gt.intersect))
+    tafit:=ta1d(ind(miu.gt.intersect))
+    reg=regline_stats(miufit, tafit)
+    intercept=reg@yintercept
+    ; RSE=reg@RSE
+
+    Ta_linear:=miu*reg+intercept 
+    shape:=ta1d/Ta_linear
+
+    resxy@trYMaxF= Ymax(ch-2)
+    resxy@trYMinF= Ymin(ch-2)
 
     plot((pj-51)*5+ch-2)=gsn_csm_xy(wks,miu,ta1d,resxy)
 
@@ -137,42 +159,79 @@ do pj=51,54
         im=im+1
     end do
 
-    ;;-----------------------------------------------------------------------------------
-    ;; linear fits between 1~0.6
-        miufit:=miu(ind(miu.gt.0.6))
-        tafit:=ta1d(ind(miu.gt.0.6))
-        reg=regline_stats(miufit, tafit)
-        ; print(reg)
-        intercept=reg@yintercept
-        RSE=reg@RSE
         regres=True
         regres@gsLineColor="Blue"
         regres@gsLineThicknessF=regessline_thick
         regres@gsLineDashPattern=0
-        plreg((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/0,1/), (/intercept,reg+intercept/), regres)
+        plreg((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/1.0,intersect/), (/1*reg+intercept ,intersect*reg+intercept /), regres)
 
         regres@gsLineColor=txFontColor
         regres@gsLineDashPattern=2       
         regres@gsLineThicknessF=regessline_thick-1  
-        plreg1((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/0.6,0.6/), (/0.,reg*0.6+intercept/), regres)
+        plreg1((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/intersect,intersect/), (/0.,1000/), regres)
     ;;--------------------------------------------------------------------------------------------------------------------- 
-    ;; report c1
+    ; piece wise logistic
+    ;; report a1,b1  1-intersect
         tcres=True
         tcres@txFontColor=txFontColor
         tcres@txFontHeightF=0.045
 
-        xpos=0.6
-        ypos0=   (Ymax(ch-2)-Ymin(ch-2))*0.2+Ymin(ch-2)
-        ypos1=   (Ymax(ch-2)-Ymin(ch-2))*0.08+Ymin(ch-2)
-      
+        xpos=0.8
+        ypos0= 0.7 ;(Ymax(ch-2)-Ymin(ch-2))*0.2+Ymin(ch-2)
+        ypos1= 0.62  ;(Ymax(ch-2)-Ymin(ch-2))*0.08+Ymin(ch-2)
+        texta="a = 0"
+        textb="b = 0"
+        pltxta0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), texta,xpos,ypos0 , tcres) 
+        pltxtb0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textb,xpos,ypos1 , tcres) 
 
-        c0=reg+intercept
-        c1=c0-(reg*0.8+intercept)
-        textc1="c~H-13V2F35~D~FV-2H3~~B~1~N~ = "+ sprintf("%6.1f", c1)+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
-        textc0="c~H-13V2F35~D~FV-2H3~~B~0~N~ = "+ sprintf("%5.1f", c0)+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
+    ;; report a2,b2  0.6-0
+        
+        index06:=ind(miu.lt.intersect.and.(.not.ismissing(shape)).and. shape.gt. 0.5.and. shape .lt. 1.1 )
 
-        pltxtc1((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc0,xpos,ypos0 , tcres) 
-        pltxtc0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc1,xpos,ypos1 , tcres) 
+        shape_logistic:=shape(index06)
+        miu_logistic:=miu(index06)
+
+        shape_logistic=where(shape_logistic.ge.1, 1.0-1E-3, shape_logistic)
+
+        ; if (ch.eq.4 .and. pj .eq. 52) then print(shape_logistic) end if        
+        shape_logistic=sqrt(log(1.0/shape_logistic -1.0)*-1.0)
+
+
+        logistic=regline_stats(miu_logistic,shape_logistic)
+
+        a=logistic
+        b=-1.*logistic@yintercept/a
+
+
+        ; xpos=0.4
+        ; textc0="a = "+ sprintf("%5.3f", a);+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
+        ; textc1="b = "+ sprintf("%5.3f", b);+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
+
+        ; pltxtc1((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc0,xpos,ypos0 , tcres) 
+        ; pltxtc0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc1,xpos,ypos1 , tcres) 
+
+        logires=True
+        logires@gsnFrame=False
+        logires@gsnDraw=False
+        logires@xyLineColor="Blue"
+        logires@xyMarkLineMode="Lines"
+
+        logires@xyLineThicknessF=regessline_thick
+        logires@xyDashPattern=0
+
+        logires@xyCurveDrawOrder="PostDraw"
+
+        xlogi=fspan(0,1,100)
+        ylogi=1.0/(1+exp(-1*(a*(xlogi-b))^2))
+
+        ta_lin=xlogi*reg+intercept 
+        ta_log=ylogi*ta_lin
+
+        Ta_regress=where(xlogi.gt.intersect, ta_lin,ta_log )
+
+        pltlogi((pj-51)*5+ch-2)=gsn_csm_xy(wks, xlogi,Ta_regress, logires)
+
+        overlay(plot((pj-51)*5+ch-2),pltlogi((pj-51)*5+ch-2))
 
 end do
 end do
@@ -180,6 +239,7 @@ end do
     ; manually add Row titles  
     Ytires=True
     Ytires@txFontHeightF=0.014
+    Ytires@txFontThicknessF=FontThickness
     Ytires@txAngleF=90.
 
     gsn_text_ndc(wks, "PJ51 T~B~a~N~ (K)", 0.015, 0.735, Ytires)
@@ -231,6 +291,9 @@ end do
     labels                     := latlevels+"~S~o"
     gsn_labelbar_ndc (wks,dimsizes(labels)-1,labels,0.32,0.16,lbres)
 
+
+
+    gsn_text_ndc(wks,  "Intersection= "+intersect, 0.45, 0.85, Xtires)
 ;; Panels 
     resP=True
     ; resP@gsnPanelMainFontHeightF=0.01
@@ -244,7 +307,6 @@ end do
     resP@gsnPanelYWhiteSpacePercent=2
     resP@gsnPanelFigureStringsPerimOn=False
     resP@gsnPanelFigureStringsJust="TopRight"
-
 
     ; drawNDCGrid(wks)
     gsn_panel(wks,plot,(/4,5/),resP)
