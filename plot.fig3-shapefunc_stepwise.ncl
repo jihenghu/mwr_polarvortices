@@ -32,7 +32,8 @@ regessline_thick=4
 txFontColor="Black"
 FontThickness=2
 ;; ------------------- PNG -----------------------------------
-wks=gsn_open_wks("png", "fig3-shapefuction")
+wks=gsn_open_wks("png", "plot.fig3-shapefunc_stepwise")
+wks1=gsn_open_wks("png", "plot.fig3-logistic_linearity_stepwise")
 
 ;;;; ----------------- PDF ----------------------------------------
 ; wks=gsn_open_wks("pdf", "fig3-LOG")
@@ -72,19 +73,20 @@ pltxtb0=new(20,graphic)
 
 plregmark=new(20,graphic)
 
-
+plot_logistic_linearity=new(20,graphic)
 
 latlevels=(/70,72,74,76,78,80,82,84,86,88,90/)
 VALUE=      (/71,73,75,77,79,81,83,85,87,89/)
 nlevel=dimsizes(VALUE)
 
 plm=new(4*5*(nlevel),graphic)
+plm_logis=new(4*5*(nlevel),graphic)
 cmap=read_colormap_file("CET-L04")
 
 Ymax=(/500,360,270,210,150/)
 Ymin=(/160,120,90,70,60/)
 im=0
-
+is=0
 
 intersect=1.0
 
@@ -139,8 +141,6 @@ do pj=51,54
 
     Ta_linear:=miu*reg+intercept
     
-
-
     resxy@trYMaxF= 1.1;Ymax(ch-2)
     resxy@trYMinF= 0.50;Ymin(ch-2)
     ; resxy@trYMaxF= 5;Ymax(ch-2)
@@ -163,44 +163,64 @@ do pj=51,54
 
         icol = get_color_index("CET-D01A",latlevels(1:nlevel),VALUE(ilevel))
         gsres@gsMarkerColor=cmap(icol,:)        
-        ; plm(im)=gsn_add_polymarker(wks,plot((pj-51)*5+ch-2),x,y,gsres)
+        plm(im)=gsn_add_polymarker(wks,plot((pj-51)*5+ch-2),x,y,gsres)
         im=im+1
     end do
 
-        regres=True
-        regres@gsLineColor="Blue"
-        regres@gsLineThicknessF=regessline_thick
-        regres@gsLineDashPattern=0
+
+    ;;; ---------------------------------------------------------------------------------------------------
+    ;; plot the linearized logistic function
+    shape_trans:=sqrt(log(1.0/shape -1.0)*-1.0)
+
+    reslogistic=resxy
+    reslogistic@trYMaxF= 3.0
+    reslogistic@trYMinF= 0
+    plot_logistic_linearity((pj-51)*5+ch-2)=gsn_csm_xy(wks1,miu,shape_trans, reslogistic)
+
+    do ilevel=0,nlevel-1
+        index:=ind(lat1d.gt.latlevels(ilevel) .and. lat1d.le.latlevels(ilevel+1))
+
+        if(ismissing(index(0))) then continue end if
+        y:= shape_trans(index)
+        x:= miu(index)
+        icol = get_color_index("CET-D01A",latlevels(1:nlevel),VALUE(ilevel))
+        gsres@gsMarkerColor=cmap(icol,:)        
+        plm_logis(is)=gsn_add_polymarker(wks1,plot_logistic_linearity((pj-51)*5+ch-2),x,y,gsres)
+        is=is+1
+    end do
+    
+        ;;; plot the linear regression part over 1.0 ~ 0.6
+        ; regres=True
+        ; regres@gsLineColor="Blue"
+        ; regres@gsLineThicknessF=regessline_thick
+        ; regres@gsLineDashPattern=0
         ; plreg((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/1.0,intersect/), (/1,1/), regres)
 
-        regres@gsLineColor=txFontColor
-        regres@gsLineDashPattern=2       
-        regres@gsLineThicknessF=regessline_thick-1  
+        ; regres@gsLineColor=txFontColor
+        ; regres@gsLineDashPattern=2       
+        ; regres@gsLineThicknessF=regessline_thick-1  
         ; plreg1((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/intersect,intersect/), (/0.,1.1/), regres)
     ;;--------------------------------------------------------------------------------------------------------------------- 
     ; piece wise logistic
     ;; report a1,b1  1-intersect
-        tcres=True
-        tcres@txFontColor=txFontColor
-        tcres@txFontHeightF=0.045
-
-        xpos=0.8
-        ypos0= 0.7 ;(Ymax(ch-2)-Ymin(ch-2))*0.2+Ymin(ch-2)
-        ypos1= 0.62  ;(Ymax(ch-2)-Ymin(ch-2))*0.08+Ymin(ch-2)
+        ; xpos=0.8
+        ; ypos0= 0.7 ;(Ymax(ch-2)-Ymin(ch-2))*0.2+Ymin(ch-2)
+        ; ypos1= 0.62  ;(Ymax(ch-2)-Ymin(ch-2))*0.08+Ymin(ch-2)
         ; texta="a = 0"
         ; textb="b = 0"
+        ; tcres=True
+        ; tcres@txFontColor=txFontColor
+        ; tcres@txFontHeightF=0.045
         ; pltxta0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), texta,xpos,ypos0 , tcres) 
         ; pltxtb0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textb,xpos,ypos1 , tcres) 
 
     ;; report a2,b2  0.6-0
-    offset=0.0
         index06:=ind(miu.lt.1.0.and.(.not.ismissing(shape)).and. shape.gt. 0.5.and. shape .lt. 1.1 )
 
-        shape_logistic:=shape(index06)-offset
+        shape_logistic:=shape(index06)
         miu_logistic:=miu(index06)
-        ; printVarSummary(shape_logistic)
-        ;; to regression in a uniform weight sample space, conduct beam averaged sampling
 
+        ;; to regress in an uniform weighted sample space, conduct beam averaged sampling
         miu_beam:=fspan(0.01,0.99,50)
         shape_beam:=new(dimsizes(miu_beam),double,-999.9)
         do ibeam=0,dimsizes(miu_beam)-1
@@ -209,7 +229,7 @@ do pj=51,54
             shape_beam(ibeam)=avg(shape_logistic(indbm))
         end do
 
-
+        ;use only 0~0.8 to regess
         shape_beam:=shape_beam(3:40)
         miu_beam:=miu_beam(3:40)
         shape_beam=where(shape_beam.ge.1,shape_beam@_FillValue, shape_beam)
@@ -218,52 +238,49 @@ do pj=51,54
         shape_beam:=shape_beam(indvalid)
         miu_beam  :=miu_beam  (indvalid)
 
-
+        ;; plot markers as the interval means used to regress
         resremk=True
         resremk@gsMarkerIndex=1
         resremk@gsMarkerSizeF=0.02
         resremk@gsMarkerColor="RED"
-        plregmark((pj-51)*5+ch-2)=gsn_add_polymarker(wks, plot((pj-51)*5+ch-2), miu_beam, shape_beam+offset, resremk)
+        ; plregmark((pj-51)*5+ch-2)=gsn_add_polymarker(wks, plot((pj-51)*5+ch-2), miu_beam, shape_beam, resremk)
 
-
-
-
-
-
-        ; if (ch.eq.4 .and. pj .eq. 52) then print(shape_logistic) end if        
+        ;;; linearize the nonlinear shape    
         shape_beam=sqrt(log(1.0/shape_beam -1.0)*-1.0)
+        ;; linear regression
         logistic=regline_stats(miu_beam,shape_beam)
 
+        ;; extract the shape coeff. in a quadratic logistic equation:
+        ;;  y=1/(1+exp(-(a(u+b))^2))
         a=logistic
         b=logistic@yintercept/a
+        xlogi=fspan(0,1.0,100)
+        ylogi=1.0/(1+exp(-1*(a*(xlogi+b))^2))
 
+        ;;; report the coeff. in the plots
         xpos=0.6
+        ypos0= 0.7 ;(Ymax(ch-2)-Ymin(ch-2))*0.2+Ymin(ch-2)
+        ypos1= 0.62  ;(Ymax(ch-2)-Ymin(ch-2))*0.08+Ymin(ch-2)
         textc0="a = "+ sprintf("%5.3f", a);+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
         textc1="b = "+ sprintf("%5.3f", b);+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
+        tares=True
+        tares@txFontColor=txFontColor
+        tares@txFontHeightF=0.045
+        pltxtc1((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc0,xpos,ypos0 , tares) 
+        pltxtc0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc1,xpos,ypos1 , tares) 
 
-        pltxtc1((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc0,xpos,ypos0 , tcres) 
-        pltxtc0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc1,xpos,ypos1 , tcres) 
-
+        ;; plot the quadratic logistic fitting curve.
         logires=True
         logires@gsnFrame=False
         logires@gsnDraw=False
         logires@xyLineColor="Blue"
         logires@xyMarkLineMode="Lines"
-
         logires@xyLineThicknessF=regessline_thick
         logires@xyDashPattern=0
-
         logires@xyCurveDrawOrder="PostDraw"
-
-        ; most ideal fit coeff.
-        ; b=0.05
-        ; a=3.5
-        xlogi=fspan(0,1.0,100)
-        ylogi=1.0/(1+exp(-1*(a*(xlogi+b))^2))+offset
-
         pltlogi((pj-51)*5+ch-2)=gsn_csm_xy(wks, xlogi,ylogi, logires)
-
         overlay(plot((pj-51)*5+ch-2),pltlogi((pj-51)*5+ch-2))
+
 
 end do
 end do
@@ -279,6 +296,12 @@ end do
     gsn_text_ndc(wks, "PJ53 ~F8~x(m)", 0.015, 0.435, Ytires)
     gsn_text_ndc(wks, "PJ54 ~F8~x(m)", 0.015, 0.285, Ytires)
 
+    
+    gsn_text_ndc(wks1, "PJ51 f(~F8~x~F21~)", 0.015, 0.735, Ytires)
+    gsn_text_ndc(wks1, "PJ52 f(~F8~x~F21~)", 0.015, 0.585, Ytires)
+    gsn_text_ndc(wks1, "PJ53 f(~F8~x~F21~)", 0.015, 0.435, Ytires)
+    gsn_text_ndc(wks1, "PJ54 f(~F8~x~F21~)", 0.015, 0.285, Ytires)
+
     Xtires=True
     Xtires@txFontHeightF=0.014
     Xtires@txAngleF=0.
@@ -289,12 +312,25 @@ end do
     gsn_text_ndc(wks, "10 GHz", 0.72, 0.815, Xtires)
     gsn_text_ndc(wks, "22 GHz", 0.91, 0.815, Xtires)
 
+    gsn_text_ndc(wks1, "1.25 GHz", 0.15, 0.815, Xtires)
+    gsn_text_ndc(wks1, "2.6 GHz", 0.34, 0.815, Xtires)
+    gsn_text_ndc(wks1, "5.2 GHz", 0.53, 0.815, Xtires)
+    gsn_text_ndc(wks1, "10 GHz", 0.72, 0.815, Xtires)
+    gsn_text_ndc(wks1, "22 GHz", 0.91, 0.815, Xtires)
+
     Xtires@txFontThicknessF=mucapthick
     gsn_text_ndc(wks, "~F8~m~F21~", 0.145, 0.185, Xtires)
     gsn_text_ndc(wks, "~F8~m~F21~", 0.341, 0.185, Xtires)
     gsn_text_ndc(wks, "~F8~m~F21~", 0.532, 0.185, Xtires)
     gsn_text_ndc(wks, "~F8~m~F21~", 0.725, 0.185, Xtires)
     gsn_text_ndc(wks, "~F8~m~F21~", 0.915, 0.185, Xtires)
+
+    gsn_text_ndc(wks1, "~F8~m~F21~", 0.145, 0.185, Xtires)
+    gsn_text_ndc(wks1, "~F8~m~F21~", 0.341, 0.185, Xtires)
+    gsn_text_ndc(wks1, "~F8~m~F21~", 0.532, 0.185, Xtires)
+    gsn_text_ndc(wks1, "~F8~m~F21~", 0.725, 0.185, Xtires)
+    gsn_text_ndc(wks1, "~F8~m~F21~", 0.915, 0.185, Xtires)
+
 
     ;; manually ColorBars 
     lbres = True
@@ -323,9 +359,7 @@ end do
     labels                     := latlevels+"~S~o"
     gsn_labelbar_ndc (wks,dimsizes(labels)-1,labels,0.32,0.16,lbres)
 
-
-
-    gsn_text_ndc(wks,  "Intersection= "+intersect, 0.45, 0.85, Xtires)
+    ; gsn_text_ndc(wks,  "Intersection= "+intersect, 0.45, 0.85, Xtires)
 ;; Panels 
     resP=True
     ; resP@gsnPanelMainFontHeightF=0.01
@@ -342,5 +376,6 @@ end do
 
     ; drawNDCGrid(wks)
     gsn_panel(wks,plot,(/4,5/),resP)
+    gsn_panel(wks1,plot_logistic_linearity,(/4,5/),resP)
 
 end
