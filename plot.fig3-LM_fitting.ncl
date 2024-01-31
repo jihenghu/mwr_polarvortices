@@ -31,7 +31,7 @@ regessline_thick=3
 txFontColor="Black"
 
 ;; ------------------- PNG -----------------------------------
-; wks=gsn_open_wks("png", "fig3")
+wks=gsn_open_wks("png", "plot.fig3-LM_fitting")
 
 ;;;; ----------------- PDF ----------------------------------------
 ; wks=gsn_open_wks("pdf", "fig3")
@@ -39,19 +39,19 @@ txFontColor="Black"
 ; regessline_thick=2
 
 ;;;; ----------------- Black Background ----------------------------------------
-wks=gsn_open_wks("png", "fig3-Dark")
-setvalues wks
-"wkForegroundColor" : (/1.,1.,1./)  ; white
-"wkBackgroundColor" : (/0.,0.,0./)  ; black
-end setvalues
-txFontColor="white"
-; resxy@tmXMajorGrid=True
-; resxy@tmYMajorGrid=True
-resxy@tmYMajorGridThicknessF=1
-resxy@tmXMajorGridThicknessF=1
-resxy@tmYMajorGridLineDashPattern=2
-resxy@tmXMajorGridLineDashPattern=2
-resxy@tmGridDrawOrder="PreDraw"
+; wks=gsn_open_wks("png", "fig3-Dark")
+; setvalues wks
+; "wkForegroundColor" : (/1.,1.,1./)  ; white
+; "wkBackgroundColor" : (/0.,0.,0./)  ; black
+; end setvalues
+; txFontColor="white"
+; ; resxy@tmXMajorGrid=True
+; ; resxy@tmYMajorGrid=True
+; resxy@tmYMajorGridThicknessF=1
+; resxy@tmXMajorGridThicknessF=1
+; resxy@tmYMajorGridLineDashPattern=2
+; resxy@tmXMajorGridLineDashPattern=2
+; resxy@tmGridDrawOrder="PreDraw"
 
 
 
@@ -114,7 +114,12 @@ do pj=51,54
     lat1d:=lat1d(index)
     miu:=cos(incident(index)*3.14159265/180.)
     ta1d:=ta1d(index)
-    
+ 
+    fout=addfile("Ta_mu_pairs_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5","c")
+    fout->Ta=ta1d
+    fout->miu=miu
+
+
     resxy@trYMaxF=Ymax(ch-2)
     resxy@trYMinF=Ymin(ch-2)
 
