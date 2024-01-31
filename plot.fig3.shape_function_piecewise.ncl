@@ -32,7 +32,7 @@ regessline_thick=4
 txFontColor="Black"
 FontThickness=2
 ;; ------------------- PNG -----------------------------------
-wks=gsn_open_wks("png", "fig3-shapefuction-Ta")
+wks=gsn_open_wks("png", "fig3-shapefuction")
 
 ;;;; ----------------- PDF ----------------------------------------
 ; wks=gsn_open_wks("pdf", "fig3-LOG")
@@ -134,13 +134,17 @@ do pj=51,54
     intercept=reg@yintercept
     ; RSE=reg@RSE
 
-    Ta_linear:=miu*reg+intercept 
+    Ta_linear:=miu*reg+intercept
+    
+
+    resxy@trYMaxF= 1.1;Ymax(ch-2)
+    resxy@trYMinF= 0.5;Ymin(ch-2)
+    ; resxy@trYMaxF= 5;Ymax(ch-2)
+    ; resxy@trYMinF= 0.5;Ymin(ch-2)
+
     shape:=ta1d/Ta_linear
 
-    resxy@trYMaxF= Ymax(ch-2)
-    resxy@trYMinF= Ymin(ch-2)
-
-    plot((pj-51)*5+ch-2)=gsn_csm_xy(wks,miu,ta1d,resxy)
+    plot((pj-51)*5+ch-2)=gsn_csm_xy(wks,miu,shape,resxy)
 
     ;;-----------------------------------------------------------------------------------
     ;; plot markers in leveled colors
@@ -150,7 +154,7 @@ do pj=51,54
         index:=ind(lat1d.gt.latlevels(ilevel) .and. lat1d.le.latlevels(ilevel+1))
    
         if(ismissing(index(0))) then continue end if
-        y:= ta1d(index)
+        y:= shape(index)
         x:= miu(index)
 
         icol = get_color_index("CET-D01A",latlevels(1:nlevel),VALUE(ilevel))
@@ -163,12 +167,12 @@ do pj=51,54
         regres@gsLineColor="Blue"
         regres@gsLineThicknessF=regessline_thick
         regres@gsLineDashPattern=0
-        plreg((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/1.0,intersect/), (/1*reg+intercept ,intersect*reg+intercept /), regres)
+        plreg((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/1.0,intersect/), (/1,1/), regres)
 
         regres@gsLineColor=txFontColor
         regres@gsLineDashPattern=2       
         regres@gsLineThicknessF=regessline_thick-1  
-        plreg1((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/intersect,intersect/), (/0.,1000/), regres)
+        plreg1((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/intersect,intersect/), (/0.,1.1/), regres)
     ;;--------------------------------------------------------------------------------------------------------------------- 
     ; piece wise logistic
     ;; report a1,b1  1-intersect
@@ -191,7 +195,6 @@ do pj=51,54
         shape_logistic:=shape(index06)
         miu_logistic:=miu(index06)
 
-
         shape_logistic=where(shape_logistic.ge.1, 1.0-1E-3, shape_logistic)
 
         ; if (ch.eq.4 .and. pj .eq. 52) then print(shape_logistic) end if        
@@ -204,12 +207,12 @@ do pj=51,54
         b=-1.*logistic@yintercept/a
 
 
-        ; xpos=0.4
-        ; textc0="a = "+ sprintf("%5.3f", a);+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
-        ; textc1="b = "+ sprintf("%5.3f", b);+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
+        xpos=0.4
+        textc0="a = "+ sprintf("%5.3f", a);+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
+        textc1="b = "+ sprintf("%5.3f", b);+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
 
-        ; pltxtc1((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc0,xpos,ypos0 , tcres) 
-        ; pltxtc0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc1,xpos,ypos1 , tcres) 
+        pltxtc1((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc0,xpos,ypos0 , tcres) 
+        pltxtc0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc1,xpos,ypos1 , tcres) 
 
         logires=True
         logires@gsnFrame=False
@@ -222,15 +225,10 @@ do pj=51,54
 
         logires@xyCurveDrawOrder="PostDraw"
 
-        xlogi=fspan(0,1,100)
+        xlogi=fspan(0,intersect,100)
         ylogi=1.0/(1+exp(-1*(a*(xlogi-b))^2))
 
-        ta_lin=xlogi*reg+intercept 
-        ta_log=ylogi*ta_lin
-
-        Ta_regress=where(xlogi.gt.intersect, ta_lin,ta_log )
-
-        pltlogi((pj-51)*5+ch-2)=gsn_csm_xy(wks, xlogi,Ta_regress, logires)
+        pltlogi((pj-51)*5+ch-2)=gsn_csm_xy(wks, xlogi,ylogi, logires)
 
         overlay(plot((pj-51)*5+ch-2),pltlogi((pj-51)*5+ch-2))
 
@@ -243,10 +241,10 @@ end do
     Ytires@txFontThicknessF=FontThickness
     Ytires@txAngleF=90.
 
-    gsn_text_ndc(wks, "PJ51 T~B~a~N~ (K)", 0.015, 0.735, Ytires)
-    gsn_text_ndc(wks, "PJ52 T~B~a~N~ (K)", 0.015, 0.585, Ytires)
-    gsn_text_ndc(wks, "PJ53 T~B~a~N~ (K)", 0.015, 0.435, Ytires)
-    gsn_text_ndc(wks, "PJ54 T~B~a~N~ (K)", 0.015, 0.285, Ytires)
+    gsn_text_ndc(wks, "PJ51 ~F8~x(m)", 0.015, 0.735, Ytires)
+    gsn_text_ndc(wks, "PJ52 ~F8~x(m)", 0.015, 0.585, Ytires)
+    gsn_text_ndc(wks, "PJ53 ~F8~x(m)", 0.015, 0.435, Ytires)
+    gsn_text_ndc(wks, "PJ54 ~F8~x(m)", 0.015, 0.285, Ytires)
 
     Xtires=True
     Xtires@txFontHeightF=0.014

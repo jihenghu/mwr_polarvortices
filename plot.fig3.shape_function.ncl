@@ -9,7 +9,7 @@ begin
 resxy=True
 resxy@gsnFrame=False
 resxy@gsnDraw=False
-resxy@xyMarkerColor="transparent"
+resxy@xyMarkerColor="white"
 resxy@xyMarkLineModes="Markers"
 resxy@xyMarker=1
 
@@ -47,6 +47,7 @@ wks=gsn_open_wks("png", "fig3-shapefuction")
 ; "wkBackgroundColor" : (/0.,0.,0./)  ; black
 ; end setvalues
 ; txFontColor="white"
+; resxy@xyMarkerColor="black"
 ; ; resxy@tmXMajorGrid=True
 ; ; resxy@tmYMajorGrid=True
 ; resxy@tmYMajorGridThicknessF=1
@@ -69,6 +70,8 @@ pltxtc0=new(20,graphic)
 pltxta0=new(20,graphic)
 pltxtb0=new(20,graphic)
 
+plregmark=new(20,graphic)
+
 
 
 latlevels=(/70,72,74,76,78,80,82,84,86,88,90/)
@@ -83,7 +86,7 @@ Ymin=(/160,120,90,70,60/)
 im=0
 
 
-intersect=0.6
+intersect=1.0
 
 do pj=51,54
    do ch=2,6
@@ -128,8 +131,8 @@ do pj=51,54
     
     ;;-----------------------------------------------------------------------------------
     ;; linear fits between 1~0.6
-    miufit:=miu(ind(miu.gt.intersect))
-    tafit:=ta1d(ind(miu.gt.intersect))
+    miufit:=miu(ind(miu.gt.0.6))
+    tafit:=ta1d(ind(miu.gt.0.6))
     reg=regline_stats(miufit, tafit)
     intercept=reg@yintercept
     ; RSE=reg@RSE
@@ -137,8 +140,9 @@ do pj=51,54
     Ta_linear:=miu*reg+intercept
     
 
+
     resxy@trYMaxF= 1.1;Ymax(ch-2)
-    resxy@trYMinF= 0.5;Ymin(ch-2)
+    resxy@trYMinF= 0.50;Ymin(ch-2)
     ; resxy@trYMaxF= 5;Ymax(ch-2)
     ; resxy@trYMinF= 0.5;Ymin(ch-2)
 
@@ -159,7 +163,7 @@ do pj=51,54
 
         icol = get_color_index("CET-D01A",latlevels(1:nlevel),VALUE(ilevel))
         gsres@gsMarkerColor=cmap(icol,:)        
-        plm(im)=gsn_add_polymarker(wks,plot((pj-51)*5+ch-2),x,y,gsres)
+        ; plm(im)=gsn_add_polymarker(wks,plot((pj-51)*5+ch-2),x,y,gsres)
         im=im+1
     end do
 
@@ -167,12 +171,12 @@ do pj=51,54
         regres@gsLineColor="Blue"
         regres@gsLineThicknessF=regessline_thick
         regres@gsLineDashPattern=0
-        plreg((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/1.0,intersect/), (/1,1/), regres)
+        ; plreg((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/1.0,intersect/), (/1,1/), regres)
 
         regres@gsLineColor=txFontColor
         regres@gsLineDashPattern=2       
         regres@gsLineThicknessF=regessline_thick-1  
-        plreg1((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/intersect,intersect/), (/0.,1.1/), regres)
+        ; plreg1((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/intersect,intersect/), (/0.,1.1/), regres)
     ;;--------------------------------------------------------------------------------------------------------------------- 
     ; piece wise logistic
     ;; report a1,b1  1-intersect
@@ -183,31 +187,57 @@ do pj=51,54
         xpos=0.8
         ypos0= 0.7 ;(Ymax(ch-2)-Ymin(ch-2))*0.2+Ymin(ch-2)
         ypos1= 0.62  ;(Ymax(ch-2)-Ymin(ch-2))*0.08+Ymin(ch-2)
-        texta="a = 0"
-        textb="b = 0"
-        pltxta0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), texta,xpos,ypos0 , tcres) 
-        pltxtb0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textb,xpos,ypos1 , tcres) 
+        ; texta="a = 0"
+        ; textb="b = 0"
+        ; pltxta0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), texta,xpos,ypos0 , tcres) 
+        ; pltxtb0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textb,xpos,ypos1 , tcres) 
 
     ;; report a2,b2  0.6-0
-        
-        index06:=ind(miu.lt.intersect.and.(.not.ismissing(shape)).and. shape.gt. 0.5.and. shape .lt. 1.1 )
+    offset=0.0
+        index06:=ind(miu.lt.1.0.and.(.not.ismissing(shape)).and. shape.gt. 0.5.and. shape .lt. 1.1 )
 
-        shape_logistic:=shape(index06)
+        shape_logistic:=shape(index06)-offset
         miu_logistic:=miu(index06)
+        ; printVarSummary(shape_logistic)
+        ;; to regression in a uniform weight sample space, conduct beam averaged sampling
 
-        shape_logistic=where(shape_logistic.ge.1, 1.0-1E-3, shape_logistic)
+        miu_beam:=fspan(0.01,0.99,50)
+        shape_beam:=new(dimsizes(miu_beam),double,-999.9)
+        do ibeam=0,dimsizes(miu_beam)-1
+            indbm:=ind(miu_logistic.gt. (miu_beam(ibeam)-0.01) .and. miu_logistic.le. (miu_beam(ibeam)+0.01))
+            if(ismissing(indbm(0))) then continue end if
+            shape_beam(ibeam)=avg(shape_logistic(indbm))
+        end do
+
+
+        shape_beam:=shape_beam(3:40)
+        miu_beam:=miu_beam(3:40)
+        shape_beam=where(shape_beam.ge.1,shape_beam@_FillValue, shape_beam)
+
+        indvalid:=ind(.not.ismissing(shape_beam))
+        shape_beam:=shape_beam(indvalid)
+        miu_beam  :=miu_beam  (indvalid)
+
+
+        resremk=True
+        resremk@gsMarkerIndex=1
+        resremk@gsMarkerSizeF=0.02
+        resremk@gsMarkerColor="RED"
+        plregmark((pj-51)*5+ch-2)=gsn_add_polymarker(wks, plot((pj-51)*5+ch-2), miu_beam, shape_beam+offset, resremk)
+
+
+
+
+
 
         ; if (ch.eq.4 .and. pj .eq. 52) then print(shape_logistic) end if        
-        shape_logistic=sqrt(log(1.0/shape_logistic -1.0)*-1.0)
-
-
-        logistic=regline_stats(miu_logistic,shape_logistic)
+        shape_beam=sqrt(log(1.0/shape_beam -1.0)*-1.0)
+        logistic=regline_stats(miu_beam,shape_beam)
 
         a=logistic
-        b=-1.*logistic@yintercept/a
+        b=logistic@yintercept/a
 
-
-        xpos=0.4
+        xpos=0.6
         textc0="a = "+ sprintf("%5.3f", a);+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
         textc1="b = "+ sprintf("%5.3f", b);+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
 
@@ -225,8 +255,11 @@ do pj=51,54
 
         logires@xyCurveDrawOrder="PostDraw"
 
-        xlogi=fspan(0,intersect,100)
-        ylogi=1.0/(1+exp(-1*(a*(xlogi-b))^2))
+        ; most ideal fit coeff.
+        ; b=0.05
+        ; a=3.5
+        xlogi=fspan(0,1.0,100)
+        ylogi=1.0/(1+exp(-1*(a*(xlogi+b))^2))+offset
 
         pltlogi((pj-51)*5+ch-2)=gsn_csm_xy(wks, xlogi,ylogi, logires)
 
