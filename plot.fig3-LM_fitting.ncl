@@ -1,7 +1,7 @@
 
-; this script is aimed at ploting a curve of Ta versus cosine of emission angle
-; linear regression of Ta between 1-0.6
-; report c0, c1 
+; this script is do Levenberg–Marquardt fitting :
+;;  the equation to regression is a quadratic logistic signal on the background of linear signal:
+;;  Ta= (c0 + c1 * (1 - mu)) / (1 + np.exp(-1*(a * (mu + b))**2))
 
 begin
 
@@ -53,8 +53,6 @@ regessline_thick=2
 ; resxy@tmYMajorGridLineDashPattern=2
 ; resxy@tmXMajorGridLineDashPattern=2
 ; resxy@tmGridDrawOrder="PreDraw"
-
-
 
 
 ;;;; plot-->>>
@@ -161,7 +159,7 @@ do pj=51,54
         a =retcoeff(2)
         b =retcoeff(3)    
  
-    ;; linear fits between 1~0.6
+    ;; plot non-linear fits curve
         mu_dummy=fspan(0,1,100)
         Ta_dummy= (c0 + c1 * (1 - mu_dummy)) / (1 + exp(-1*(a * (mu_dummy + b))^2))
 
@@ -173,7 +171,6 @@ do pj=51,54
 
     ;;--------------------------------------------------------------------------------------------------------------------- 
     ;; report c0, c1, a, b on the plots
-
         ;; report Linear mode coeff. c0, c1
         xpos=0.75
         ypos0= (Ymax(ch-2)-Ymin(ch-2))*0.2+Ymin(ch-2)
