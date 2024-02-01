@@ -8,7 +8,7 @@ begin
 resxy=True
 resxy@gsnFrame=False
 resxy@gsnDraw=False
-resxy@xyMarkerColor="transparent"
+resxy@xyMarkerColor="white"
 resxy@xyMarkLineModes="Markers"
 resxy@xyMarker=1
 
@@ -31,19 +31,20 @@ regessline_thick=3
 txFontColor="Black"
 
 ;; ------------------- PNG -----------------------------------
-wks=gsn_open_wks("png", "plot.fig3-LM_fitting")
+; wks=gsn_open_wks("png", "plot.fig3-LM_fitting")
 
 ;;;; ----------------- PDF ----------------------------------------
-; wks=gsn_open_wks("pdf", "fig3")
-; mucapthick=1
-; regessline_thick=2
+wks=gsn_open_wks("pdf", "plot.fig3-LM_fitting")
+mucapthick=1
+regessline_thick=2
 
 ;;;; ----------------- Black Background ----------------------------------------
-; wks=gsn_open_wks("png", "fig3-Dark")
+; wks=gsn_open_wks("png", "plot.fig3-LM_fitting-Dark")
 ; setvalues wks
 ; "wkForegroundColor" : (/1.,1.,1./)  ; white
 ; "wkBackgroundColor" : (/0.,0.,0./)  ; black
 ; end setvalues
+; resxy@xyMarkerColor="black"
 ; txFontColor="white"
 ; ; resxy@tmXMajorGrid=True
 ; ; resxy@tmYMajorGrid=True
@@ -63,6 +64,10 @@ plreg1=new(20,graphic)
 
 pltxtc1=new(20,graphic)
 pltxtc0=new(20,graphic)
+pltxta=new(20,graphic)
+pltxtb=new(20,graphic)
+pltrse=new(20,graphic)
+
 
 latlevels=(/70,72,74,76,78,80,82,84,86,88,90/)
 VALUE=      (/71,73,75,77,79,81,83,85,87,89/)
@@ -114,19 +119,14 @@ do pj=51,54
     lat1d:=lat1d(index)
     miu:=cos(incident(index)*3.14159265/180.)
     ta1d:=ta1d(index)
- 
-    fout=addfile("Ta_mu_pairs_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5","c")
-    fout->Ta=ta1d
-    fout->miu=miu
-
-
+    
+    ;;-----------------------------------------------------------------------------------
+    ;; do dummy xy marker plot, white points
     resxy@trYMaxF=Ymax(ch-2)
     resxy@trYMinF=Ymin(ch-2)
-
     plot((pj-51)*5+ch-2)=gsn_csm_xy(wks,miu,ta1d,resxy)
 
-    ;;-----------------------------------------------------------------------------------
-    ;; plot markers in leveled colors
+    ;; plot markers in colors of leveled latitudes
     gsres=True
     gsres@gsMarkerIndex=1
     do ilevel=0,nlevel-1
@@ -141,43 +141,66 @@ do pj=51,54
         plm(im)=gsn_add_polymarker(wks,plot((pj-51)*5+ch-2),x,y,gsres)
         im=im+1
     end do
-
+    
     ;;-----------------------------------------------------------------------------------
+    ; pairsH5="Ta_mu_pairs_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5"
+    ; if(fileexists(pairsH5)) then system("rm "+pairsH5) end if
+    ; fout=addfile(pairsH5,"c")
+    ; fout->Ta=ta1d
+    ; fout->miu=miu
+
+    ;; ------------------------------------------------------------------------------------------------------
+    ;; call python to do Levenberg–Marquardt fitting and return the coeficent:
+    ;;  the equation to regression is a quadratic logistic signal on the background of linear equation:
+    ;;  Ta= (c0 + c1 * (1 - mu)) / (1 + np.exp(-1*(a * (mu + b))**2))
+        retstring=systemfunc("python Quadratic_Logistic_LM_fitting.py "+sprinti("%0.2i",ch)+" "+sprinti("%0.2i",pj))
+        retcoeff=todouble(retstring)
+        ;; distribute the returned coefficients
+        c0=retcoeff(0)
+        c1=retcoeff(1)
+        a =retcoeff(2)
+        b =retcoeff(3)    
+ 
     ;; linear fits between 1~0.6
-        miufit:=miu(ind(miu.gt.0.6))
-        tafit:=ta1d(ind(miu.gt.0.6))
-        reg=regline_stats(miufit, tafit)
-        ; print(reg)
-        intercept=reg@yintercept
-        RSE=reg@RSE
+        mu_dummy=fspan(0,1,100)
+        Ta_dummy= (c0 + c1 * (1 - mu_dummy)) / (1 + exp(-1*(a * (mu_dummy + b))^2))
+
         regres=True
         regres@gsLineColor="Blue"
         regres@gsLineThicknessF=regessline_thick
         regres@gsLineDashPattern=0
-        plreg((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/0,1/), (/intercept,reg+intercept/), regres)
+        plreg((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2),mu_dummy, Ta_dummy, regres)
 
-        regres@gsLineColor=txFontColor
-        regres@gsLineDashPattern=2       
-        regres@gsLineThicknessF=regessline_thick-1  
-        plreg1((pj-51)*5+ch-2)=gsn_add_polyline(wks,  plot((pj-51)*5+ch-2), (/0.6,0.6/), (/0.,reg*0.6+intercept/), regres)
     ;;--------------------------------------------------------------------------------------------------------------------- 
-    ;; report c1
+    ;; report c0, c1, a, b on the plots
+
+        ;; report Linear mode coeff. c0, c1
+        xpos=0.75
+        ypos0= (Ymax(ch-2)-Ymin(ch-2))*0.2+Ymin(ch-2)
+        ypos1= (Ymax(ch-2)-Ymin(ch-2))*0.08+Ymin(ch-2)
+        texta="c~H-13V2F35~D~FV-2H3~~B~0~N~ = "+sprintf("%5.2f",c0)
+        textb="c~H-13V2F35~D~FV-2H3~~B~1~N~ = "+sprintf("%5.2f",c1)
         tcres=True
         tcres@txFontColor=txFontColor
         tcres@txFontHeightF=0.045
+        pltxta((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), texta,xpos,ypos0 , tcres) 
+        pltxtb((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textb,xpos,ypos1 , tcres) 
 
-        xpos=0.6
-        ypos0=   (Ymax(ch-2)-Ymin(ch-2))*0.2+Ymin(ch-2)
-        ypos1=   (Ymax(ch-2)-Ymin(ch-2))*0.08+Ymin(ch-2)
-      
-
-        c0=reg+intercept
-        c1=c0-(reg*0.8+intercept)
-        textc1="c~H-13V2F35~D~FV-2H3~~B~1~N~ = "+ sprintf("%6.1f", c1)+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
-        textc0="c~H-13V2F35~D~FV-2H3~~B~0~N~ = "+ sprintf("%5.1f", c0)+" ~F34~1~F21~ "+ sprintf("%4.2f", RSE)+" K"
-
+        ;;; report the logistic coeff. a, b
+        xpos=0.3
+        ypos0= (Ymax(ch-2)-Ymin(ch-2))*0.2+Ymin(ch-2)
+        ypos1= (Ymax(ch-2)-Ymin(ch-2))*0.08+Ymin(ch-2)
+        textc0="a = "+ sprintf("%5.3f", a)
+        textc1="b = "+ sprintf("%5.3f", b)
         pltxtc1((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc0,xpos,ypos0 , tcres) 
         pltxtc0((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), textc1,xpos,ypos1 , tcres) 
+
+        ;;; report the root mean square error 
+        ta1d_predict:= (c0 + c1 * (1 - miu)) / (1 + exp(-1*(a * (miu + b))^2))
+        regall=regline_stats(ta1d,ta1d_predict)
+        xpos=0.65
+        ypos= (Ymax(ch-2)-Ymin(ch-2))*0.4+Ymin(ch-2)
+        pltrse((pj-51)*5+ch-2)=gsn_add_text(wks, plot((pj-51)*5+ch-2), "RMSE = "+sprintf("%5.2f",regall@RSE)+" K",xpos,ypos, tcres) 
 
 end do
 end do
