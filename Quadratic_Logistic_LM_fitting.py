@@ -14,7 +14,7 @@ def nonlinear_model(x, c0, c1, a, b):
 ch=int(sys.argv[1])
 pj=int(sys.argv[2])
 
-TA_file=h5py.File(f"Ta_mu_pairs_ch{ch:02d}_pj{pj:02d}.h5",'r')
+TA_file=h5py.File(f"Ta_mu_pairs/Ta_mu_pairs_ch{ch:02d}_pj{pj:02d}.h5",'r')
 Y =TA_file['Ta'][:]
 X =TA_file['miu'][:]
 TA_file.close()

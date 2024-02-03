@@ -92,7 +92,7 @@ intersect=1.0
 do pj=51,54
    do ch=2,6
 
-    ftprt:=addfile("./TA_swath_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5","r")
+    ftprt:=addfile("Ta_swath/TA_swath_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5","r")
 
     TA:=ftprt->TA
     lat:=ftprt->latitude
@@ -123,7 +123,7 @@ do pj=51,54
     incident:=ndtooned(LZA)
     ta1d:=ndtooned(TA)
     lat1d:=ndtooned(lat)
-    index:=ind((.not.ismissing(incident)).and.lat1d.gt.min(VALUE) )
+    index:=ind((.not.ismissing(incident)).and.lat1d.gt.min(latlevels) )
 
     lat1d:=lat1d(index)
     miu:=cos(incident(index)*3.14159265/180.)

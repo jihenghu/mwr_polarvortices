@@ -31,12 +31,12 @@ regessline_thick=3
 txFontColor="Black"
 
 ;; ------------------- PNG -----------------------------------
-; wks=gsn_open_wks("png", "plot.fig3-LM_fitting")
+wks=gsn_open_wks("png", "plot.fig3-LM_fitting")
 
 ;;;; ----------------- PDF ----------------------------------------
-wks=gsn_open_wks("pdf", "plot.fig3-LM_fitting")
-mucapthick=1
-regessline_thick=2
+; wks=gsn_open_wks("pdf", "plot.fig3-LM_fitting")
+; mucapthick=1
+; regessline_thick=2
 
 ;;;; ----------------- Black Background ----------------------------------------
 ; wks=gsn_open_wks("png", "plot.fig3-LM_fitting-Dark")
@@ -81,7 +81,7 @@ im=0
 do pj=51,54
    do ch=2,6
 
-    ftprt:=addfile("./TA_swath_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5","r")
+    ftprt:=addfile("Ta_swath/TA_swath_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5","r")
 
     TA:=ftprt->TA
     lat:=ftprt->latitude
@@ -112,7 +112,7 @@ do pj=51,54
     incident:=ndtooned(LZA)
     ta1d:=ndtooned(TA)
     lat1d:=ndtooned(lat)
-    index:=ind((.not.ismissing(incident)).and.lat1d.gt.min(VALUE) )
+    index:=ind((.not.ismissing(incident)).and.lat1d.gt.min(latlevels) )
 
     lat1d:=lat1d(index)
     miu:=cos(incident(index)*3.14159265/180.)
@@ -141,12 +141,13 @@ do pj=51,54
     end do
     
     ;;-----------------------------------------------------------------------------------
-    ; pairsH5="Ta_mu_pairs_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5"
+    ; pairsH5="Ta_mu_pairs/Ta_mu_pairs_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5"
     ; if(fileexists(pairsH5)) then system("rm "+pairsH5) end if
     ; fout=addfile(pairsH5,"c")
     ; fout->Ta=ta1d
     ; fout->miu=miu
 
+    ; continue
     ;; ------------------------------------------------------------------------------------------------------
     ;; call python to do Levenberg–Marquardt fitting and return the coeficent:
     ;;  the equation to regression is a quadratic logistic signal on the background of linear equation:

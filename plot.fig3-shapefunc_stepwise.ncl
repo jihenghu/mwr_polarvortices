@@ -124,7 +124,7 @@ do pj=51,54
     incident:=ndtooned(LZA)
     ta1d:=ndtooned(TA)
     lat1d:=ndtooned(lat)
-    index:=ind((.not.ismissing(incident)).and.lat1d.gt.min(VALUE) )
+    index:=ind((.not.ismissing(incident)).and.lat1d.gt.min(latlevels) )
 
     lat1d:=lat1d(index)
     miu:=cos(incident(index)*3.14159265/180.)
