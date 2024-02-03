@@ -47,11 +47,11 @@ resmk@txFontColor="Black"
 resmk@txFontHeightF=0.025
 resmk@txFontThicknessF=3
 
-maxmaps=(/880.,470.,338.,256.,200.,144./)
-minmaps=(/760.,410.,314.,244.,188.,138./)
-intermaps=(/10.,5.,2.,1.,1.,0.5/)
+maxmaps=(/880.,480.,340.,258.,200.,144./)
+minmaps=(/740.,450.,328.,240.,184.,136./)
+intermaps=(/10.,3.,1.,1.,1.,0.5/)
 
-minus=(/820,440,326,250,194,141/)
+minus=(/810,465,334,249,192,140/)
 
 plot=new(16,graphic)
 tmlat1=new(16,graphic)
@@ -66,16 +66,16 @@ mucapthick=3
 
 
 ;; ------------------- PNG -----------------------------------
-wks=gsn_open_wks("png", "plot.fig1.Ta_nadir_stepwise")
+wks=gsn_open_wks("png", "plot.fig2.Ta_nadir_stepwise")
 
 
 ;;;; ----------------- PDF ----------------------------------------
-; wks=gsn_open_wks("pdf", "fig1")
+; wks=gsn_open_wks("pdf", "fig2")
 ; PanelFigureStringsBackgroundFillColor="white"
 ; mucapthick=1
 
-;;;; ----------------- Black Background ----------------------------------------
-; wks=gsn_open_wks("png", "fig1-Dark")
+;;; ----------------- Black Background ----------------------------------------
+; wks=gsn_open_wks("png", "fig2-Dark")
 ; setvalues wks
 ; "wkForegroundColor" : (/1.,1.,1./)  ; white
 ; "wkBackgroundColor" : (/0.,0.,0./)  ; black
@@ -84,7 +84,7 @@ wks=gsn_open_wks("png", "plot.fig1.Ta_nadir_stepwise")
 
 ;;;; plot-->>>
 do pj=51,54
-   do ch=4,6
+   do ch=1,3
 
     ftprt:=addfile("../Ta_swath/TA_swath_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5","r")
 
@@ -112,8 +112,7 @@ do pj=51,54
     LZA@lon2d=lon
 
     cosine:=LZA
-    cosine=cos(LZA*3.14159265/180.)
-
+    cosine=cos(LZA*3.14/180.)
 
 ;; -------------------------------------------------------------------------------------------
 
@@ -199,6 +198,7 @@ do pj=51,54
     ; TA:=Ta_nadir
 ;;; ---------------------------------------------------------------------------------------------
 ;;; PLOT TA Nadir Polar region    
+
 ;; antenna temp
     maxlev=maxmaps(ch-1)-minus(ch-1)
     minlev=minmaps(ch-1)-minus(ch-1)
@@ -212,48 +212,44 @@ do pj=51,54
     res@cnLabelBarEndStyle="IncludeOuterBoxes"
 
     if(ch.eq.6) then res@lbLabelStride=10 end if
-    res@cnFillPalette:=read_colormap_file("CET-D01A")
-    ; res@cnFillPalette:=read_colormap_file("BlueDarkRed18")
+    res@cnFillPalette=read_colormap_file("CET-D01A")
+;  res@cnFillPalette:=read_colormap_file("BlueDarkRed18")
 
     TM:=TA
     TM=TA-minus(ch-1)
+    plot((ch-1)+(pj-51)*4)=gsn_csm_contour_map(wks, TM, res)
 
-    printMinMax(TM, 0)
-
-    ; copy_VarCoords(TA, TM)
-    plot((ch-4)+(pj-51)*4)=gsn_csm_contour_map(wks, TM, res)
-
-    if (ch.eq.4) then 
-        pm=plot((ch-4)+(pj-51)*4)
+    if (ch.eq.1) then 
+        pm=plot((ch-1)+(pj-51)*4)
         getvalues pm@contour
-        "cnLevels"               : levels_ch4
-        "cnFillColors"           : colors_ch4
+        "cnLevels"               : levels_ch1
+        "cnFillColors"           : colors_ch1
         end getvalues
     end if
 
-    if (ch.eq.5) then 
-        pm=plot((ch-4)+(pj-51)*4)
+    if (ch.eq.2) then 
+        pm=plot((ch-1)+(pj-51)*4)
         getvalues pm@contour
-        "cnLevels"               : levels_ch5
-        "cnFillColors"           : colors_ch5
+        "cnLevels"               : levels_ch2
+        "cnFillColors"           : colors_ch2
         end getvalues
     end if
 
-    if (ch.eq.6) then 
-        pm=plot((ch-4)+(pj-51)*4)
+    if (ch.eq.3) then 
+        pm=plot((ch-1)+(pj-51)*4)
         getvalues pm@contour
-        "cnLevels"               : levels_ch6
-        "cnFillColors"           : colors_ch6
+        "cnLevels"               : levels_ch3
+        "cnFillColors"           : colors_ch3
         end getvalues
     end if
 
 ;;; grid labels
-    ; tmlat1((pj-51)*4+(ch-4))=gsn_add_text(wks, plot((pj-51)*4+(ch-4)), "70~S~o~N~N", -45, 70, resmk)
-    ; tmlat2((pj-51)*4+(ch-4))=gsn_add_text(wks, plot((pj-51)*4+(ch-4)), "80~S~o~N~N", -45, 80, resmk)
-    ; tmlon1((pj-51)*4+(ch-4))=gsn_add_text(wks, plot((pj-51)*4+(ch-4)), "0~S~o~N~E", 0, 72, resmk)
-    ; tmlon2((pj-51)*4+(ch-4))=gsn_add_text(wks, plot((pj-51)*4+(ch-4)), "90~S~o~N~E", 90, 74, resmk)
-    ; tmlon3((pj-51)*4+(ch-4))=gsn_add_text(wks, plot((pj-51)*4+(ch-4)), "180~S~o~N~E", 180, 72, resmk)
-    ; tmlon4((pj-51)*4+(ch-4))=gsn_add_text(wks, plot((pj-51)*4+(ch-4)), "90~S~o~N~W", -90, 74, resmk)
+    ; tmlat1((pj-51)*4+(ch-1))=gsn_add_text(wks, plot((pj-51)*4+(ch-1)), "70~S~o~N~N", -45, 70, resmk)
+    ; tmlat2((pj-51)*4+(ch-1))=gsn_add_text(wks, plot((pj-51)*4+(ch-1)), "80~S~o~N~N", -45, 80, resmk)
+    ; tmlon1((pj-51)*4+(ch-1))=gsn_add_text(wks, plot((pj-51)*4+(ch-1)), "0~S~o~N~E", 0, 72, resmk)
+    ; tmlon2((pj-51)*4+(ch-1))=gsn_add_text(wks, plot((pj-51)*4+(ch-1)), "90~S~o~N~E", 90, 74, resmk)
+    ; tmlon3((pj-51)*4+(ch-1))=gsn_add_text(wks, plot((pj-51)*4+(ch-1)), "180~S~o~N~E", 180, 72, resmk)
+    ; tmlon4((pj-51)*4+(ch-1))=gsn_add_text(wks, plot((pj-51)*4+(ch-1)), "90~S~o~N~W", -90, 74, resmk)
 
 ;;; emission angle
     res@cnLevelSelectionMode="ExplicitLevels"
@@ -298,17 +294,17 @@ end do
     Xtires@txFontHeightF=0.016
     Xtires@txAngleF=0.
 
-    gsn_text_ndc(wks, "5.2 GHz", 0.18, 0.985, Xtires)
-    gsn_text_ndc(wks, "10 GHz", 0.41, 0.985, Xtires)
-    gsn_text_ndc(wks, "22 GHz", 0.63, 0.985, Xtires)
+    gsn_text_ndc(wks, "0.6 GHz", 0.18, 0.985, Xtires)
+    gsn_text_ndc(wks, "1.25 GHz", 0.41, 0.985, Xtires)
+    gsn_text_ndc(wks, "2.6 GHz", 0.63, 0.985, Xtires)
     Xtires@txFontHeightF=0.012
-    gsn_text_ndc(wks, minus(3)+"K", 0.18+0.08, 0.984, Xtires)
-    gsn_text_ndc(wks, minus(4)+"K", 0.41+0.075, 0.984, Xtires)
-    gsn_text_ndc(wks, minus(5)+"K", 0.63+0.08, 0.984, Xtires)
-  
+    gsn_text_ndc(wks, minus(0)+"K", 0.18+0.08, 0.984, Xtires)
+    gsn_text_ndc(wks, minus(1)+"K", 0.41+0.075, 0.984, Xtires)
+    gsn_text_ndc(wks, minus(2)+"K", 0.63+0.08, 0.984, Xtires)
+
     Xtires@txFontHeightF=0.016
     Xtires@txFontThicknessF=mucapthick
-    gsn_text_ndc(wks, "~F8~m", 0.85, 0.985, Xtires)
+    gsn_text_ndc(wks, "~F8~m~F21~ (1.25/2.6 GHz)", 0.85, 0.985, Xtires)
 
 ;; manually ColorBars 
     lbres = True
@@ -321,20 +317,20 @@ end do
     lbres@lbBoxLinesOn=False
     lbres@lbMonoFillPattern    = True                ; fill sold
     lbres@lbTitleOn=True
-    lbres@lbTitleString="Nadir T~B~a~N~~S~'~N~ (K)"
+    lbres@lbTitleString="T~B~a~N~~S~'~N~ (K)"
     lbres@lbTitleFontHeightF=0.014
     lbres@lbLabelAlignment="InteriorEdges"
     ;; ----------------------
-    lbres@lbFillColors         = colors_ch4      ; must be RGB triplets
-    labels                     = "" + levels_ch4    
+    lbres@lbFillColors         = colors_ch1      ; must be RGB triplets
+    labels                     = "" + levels_ch1    
     gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.063,0.05,lbres)
     ;; ----------------------
-    lbres@lbFillColors         := colors_ch5      ; must be RGB triplets
-    labels                     := "" + levels_ch5    
-    gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.291,0.05,lbres)
+    lbres@lbFillColors         := colors_ch2      ; must be RGB triplets
+    labels                     := "" + levels_ch2    
+    gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.289,0.05,lbres)
     ;; ----------------------
-    lbres@lbFillColors         := colors_ch6      ; must be RGB triplets
-    labels                     := "" + levels_ch6    
+    lbres@lbFillColors         := colors_ch3      ; must be RGB triplets
+    labels                     := "" + levels_ch3    
     gsn_labelbar_ndc (wks,dimsizes(labels)+1,labels,0.517,0.05,lbres)
      ;; ----------------------
     lbres@lbTitleString="~F8~m"
@@ -347,19 +343,19 @@ end do
     gsn_labelbar_ndc (wks,dimsizes(labels)-1,labels,0.743,0.05,lbres)
 
 ;; Panels 
-    resP=True
-    resP@gsnPanelMainFontHeightF=0.01
-    resP@gsnPanelTop=0.97
-    resP@gsnPanelBottom=0.07
-    resP@gsnPanelLeft=0.03
+resP=True
+resP@gsnPanelMainFontHeightF=0.01
+resP@gsnPanelTop=0.97
+resP@gsnPanelBottom=0.07
+resP@gsnPanelLeft=0.03
 
-    resP@gsnPanelFigureStrings=(/"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P"/)
-    resP@gsnPanelFigureStringsBackgroundFillColor=PanelFigureStringsBackgroundFillColor
+resP@gsnPanelFigureStrings=(/"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P"/)
+resP@gsnPanelFigureStringsBackgroundFillColor=PanelFigureStringsBackgroundFillColor
 
-    resP@gsnPanelFigureStringsPerimOn=False
-    resP@gsnPanelFigureStringsJust="TopRight"
+resP@gsnPanelFigureStringsPerimOn=False
+resP@gsnPanelFigureStringsJust="TopRight"
 
-    ; drawNDCGrid(wks)
-    gsn_panel(wks,plot,(/4,4/),resP)
+; drawNDCGrid(wks)
+gsn_panel(wks,plot,(/4,4/),resP)
 
 end
