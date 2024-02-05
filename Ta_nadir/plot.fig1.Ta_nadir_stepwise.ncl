@@ -192,7 +192,7 @@ do pj=51,54
     ; Ta(u)=[c0+c1/0.2(1-u)]/[1+exp(-(a(u+b))^2)] => Ta_nadir= {Ta(u)/[1+exp(-(a(u+b))^2)]}-5C1(1-u)
     ; Ta_nadir 
     ; miu*reg+intercept
-    TA=TA/(1+exp(-1* (a*(cosine+b))^2)) - cosine*reg
+    TA=TA*(1+exp(-1* (a*(cosine+b))^2)) - cosine*reg
     TA=reg+TA
 
     ; copy_VarCoords(TA, Ta_nadir)

@@ -28,10 +28,10 @@ res@mpCenterLatF      = 90
 res@mpCenterLonF      = 0
 
 res@mpLimitMode ="Angles"
-res@mpLeftAngleF = 20
-res@mpRightAngleF= 20
-res@mpBottomAngleF= 20
-res@mpTopAngleF= 20
+res@mpLeftAngleF = 40
+res@mpRightAngleF= 40
+res@mpBottomAngleF= 40
+res@mpTopAngleF= 40
 res@mpLandFillColor="transparent"
 res@mpGeophysicalLineColor="transparent"
 
@@ -46,12 +46,11 @@ resmk=True
 resmk@txFontColor="Black"
 resmk@txFontHeightF=0.025
 resmk@txFontThicknessF=3
-
-maxmaps=(/880.,470.,338.,258.,200.,144./)
-minmaps=(/760.,410.,314.,240.,184.,136./)
+maxmaps=(/880.,470.,338.,256.,200.,144./)
+minmaps=(/760.,410.,314.,244.,188.,138./)
 intermaps=(/10.,5.,2.,1.,1.,0.5/)
 
-minus=(/820,440,326,249,192,140/)
+minus=(/820,440,326,250,194,141/)
 plot=new(16,graphic)
 tmlat1=new(16,graphic)
 tmlat2=new(16,graphic)
@@ -130,7 +129,7 @@ do pj=51,54
 ;; INFER a Ta nadir (c0)
 ;;  find a c0 to with which a the present points satisfy the shape function decided with [a, b] and limb darkening c1.
 
-    TA=TA/(1+exp(-1* (a*(cosine+b))^2)) - (1-cosine)*c1
+    TA=TA*(1+exp(-1* (a*(cosine+b))^2)) - (1-cosine)*c1
 
 ;;; ---------------------------------------------------------------------------------------------
 ;;; PLOT TA Nadir Polar region    
@@ -154,6 +153,7 @@ TM:=TA
 TM=TA-minus(ch-1)
 
 printMinMax(TM, 0)
+
 
 ; copy_VarCoords(TA, TM)
 plot((ch-4)+(pj-51)*4)=gsn_csm_contour_map(wks, TM, res)
