@@ -47,11 +47,18 @@ resmk@txFontColor="Black"
 resmk@txFontHeightF=0.025
 resmk@txFontThicknessF=3
 
-maxmaps=(/880.,470.,338.,253.,198.,144./)
-minmaps=(/760.,410.,314.,229.,182.,136./)
+; maxmaps=(/880.,470.,338.,253.,198.,144./)
+; minmaps=(/760.,410.,314.,229.,182.,136./)
+; intermaps=(/10.,5.,2.,2.,1.,0.5/)
+
+; minus=(/820,440,326,241,190,140/)
+
+
+maxmaps=(/880.,470.,338.,253.,198.,120./)
+minmaps=(/760.,410.,314.,229.,182.,80./)
 intermaps=(/10.,5.,2.,2.,1.,0.5/)
 
-minus=(/820,440,326,241,190,140/)
+minus=(/820,440,326,241,190,100/)
 
 plot=new(16,graphic)
 tmlat1=new(16,graphic)
@@ -66,7 +73,7 @@ mucapthick=3
 
 
 ;; ------------------- PNG -----------------------------------
-wks=gsn_open_wks("png", "fig1")
+wks=gsn_open_wks("png", "fig1-limb")
 
 
 ;;;; ----------------- PDF ----------------------------------------
@@ -86,7 +93,7 @@ wks=gsn_open_wks("png", "fig1")
 do pj=51,54
    do ch=4,6
 
-    ftprt:=addfile("./TA_swath_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5","r")
+    ftprt:=addfile("Ta_swath/TA_swath_ch"+sprinti("%0.2i",ch)+"_pj"+sprinti("%0.2i",pj)+".h5","r")
 
     TA:=ftprt->TA
     lat:=ftprt->latitude
