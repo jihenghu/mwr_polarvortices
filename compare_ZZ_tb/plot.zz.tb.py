@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import h5py
 from scipy.special import legendre
 from scipy.optimize import curve_fit
+import matplotlib
+matplotlib.rcParams['font.size'] = 24.0
+
 
 shape_func = pd.read_csv('./shape_fuc_ch6.csv')
 mu_=shape_func['mu'][:].values
@@ -39,22 +42,39 @@ base=c0-c1*(1-mu)/0.2+0.5*c2*(mu-0.2)*(1-mu)/0.04
 shapes=Polynomials(mu,*coeffs)
 tb=base*shapes
 
-fig, axes = plt.subplots(ncols=2,nrows=1,figsize=(20, 10))
+fig, axes = plt.subplots(ncols=2,nrows=2,figsize=(20, 20))
 
-ax = axes[0]
+ax = axes[0,0]
 ax.set_xlim(1,0)
-# ax.scatter(mu_, shape_, c='blue' ,label="Tb _ch6")
-ax.plot(mu,base, c='blue' ,label="Tb _ch6 ")
+ax.scatter(mu_, shape_, c='blue' ,label=" _ch6")
+ax.plot(mu,shapes, c='blue' ,label="fitted _ch6 ")
 ax.grid()
 ax.legend()
-ax.set_title(f'a. Tb PJ51 CH6 north pole',fontsize=25,loc="left")
+ax.set_title(f'a. Shape function CH6',fontsize=25,loc="left")
 
-ax = axes[1]
+
+ax = axes[0,1]
 lats=np.linspace(0,180,180)-89.5
 ax.plot(lats, c0_0, c='red' ,label="C0 _ch6")
 ax.grid()
 ax.legend()
 ax.set_title(f'b. C0 PJ51 CH6',fontsize=25,loc="left")
+
+
+ax = axes[1,0]
+ax.set_xlim(1,0)
+ax.plot(mu,base, c='blue' ,label=" _ch6 ")
+ax.grid()
+ax.legend()
+ax.set_title(f'c. Base function north pole',fontsize=25,loc="left")
+
+
+ax = axes[1,1]
+ax.set_xlim(1,0)
+ax.plot(mu,tb, c='blue' ,label="Tb _ch6 ")
+ax.grid()
+ax.legend()
+ax.set_title(f'd. Tb PJ51 CH6 north pole',fontsize=25,loc="left")
 
 
 
