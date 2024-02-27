@@ -11,6 +11,8 @@ __pycache__/
 *.HDF5
 *.nc
 *.pdf
+*.csv
+*.txt
 
 # C extensions
 *.so

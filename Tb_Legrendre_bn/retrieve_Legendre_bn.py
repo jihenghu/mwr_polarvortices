@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.special import legendre
 import h5py
+import pandas as pd
+
 
 # import 40-order expansion coefficients of legrendre polynomials of Beam Pattern, an
 # ch: starting from 0 for channel 1
@@ -36,6 +38,9 @@ def extract_Ta():
     TA_file=h5py.File(f"../Ta_mu_pairs/Ta_mu_pairs_ch{ch+1:02d}_pj{pj:02d}.h5","r")
     Ta=TA_file['Ta'][:]
     miu=TA_file['miu'][:]
+
+    # print(min(Ta),max(Ta))
+    # print(min(miu),max(miu))
 
 def Plot_Ta(mu,data,coeffs):
     fig, axes = plt.subplots(ncols=2,nrows=2,figsize=(20, 20))
@@ -119,13 +124,13 @@ def sort_mu_with_Ta(A, B):
 
 if __name__=="__main__":
     # ch=5 # 0 for channel 1
-    for ch in range(0,6):
+    for ch in range(1,6):
         pj=51
 
-        ord=40
+        ord=20
         LoadBeamLegrendreAn(ch)
 
-        print(AN)
+        # print(AN)
 
         elevation_angles = np.linspace(0, 180, 181)
         mu=np.cos(elevation_angles/180.*np.pi)  ## 1 -> -1
@@ -148,13 +153,41 @@ if __name__=="__main__":
         Ta,miu=sort_mu_with_Ta(Ta,miu)
 
 
-
         ## Legendre expansion of Ta
         initial_guess = np.float64([1.0] * ord)  # Initial guess for coefficients TO 20TH ORDER
-        # coeffs, covars = curve_fit(Legendre_Polynomials, miu, Ta, p0=initial_guess)
-        coeffs, covars = curve_fit(Ta_func, np.float64(miu), np.float64(Ta), p0=initial_guess)
 
-        Plot_Ta(miu,Ta,coeffs[0:20])
+        if ch==1:
+           initial_guess=[350, 1, 200, 1, -100, 1, 60, 1, -20, 1, 10, 1, 10, 1, 30, 1, -25, 1, 30, 1]
+        if ch==2:
+           initial_guess=[280, 1, 140, 1, -100, 1, 60, 1, -40, 1, 20, 1, -4, 1, -5, 1,  10, 1, -5, 1]
+        if ch==3:
+           initial_guess=[200, 1, 107, 1,  -80, 1, 50, 1, -30, 1, 15, 1, -4, 1, -5, 1,  10, 1, -5, 1]
+        if ch==4:
+           initial_guess=[200, 1,  80, 1,  -60, 1, 40, 1, -30, 1, 15, 1, -5, 1, -5, 1,   5, 1, -2, 1]
+        if ch==5:
+           initial_guess=[100, 1,  50, 1,  -50, 1, 40, 1, -30, 1, 15, 1, -5, 1, -5, 1,   5, 1, -5, 1]
+
+
+        # coeffs, covars = curve_fit(Legendre_Polynomials, miu, Ta, p0=initial_guess)
+        coeffs, covars = curve_fit(Ta_func, np.float64(miu), np.float64(Ta), p0=initial_guess, bounds=(
+                                        (  5, 0,    0, 0, -200, 0,   0, 0, -100, 0,  0, 0, -10, 0, -10, 0, -50, 0, -10, 0),
+                                        (500, 2,  500, 2,    0, 2, 100, 2,    0, 2, 50, 2,  50, 2,  50, 2,  50, 2,  50, 2),
+                                    ))
+
+        covars=np.where(covars<1E-15, 0, covars)
+
+        # print(coeffs)
+
+        # Plot_Ta(miu,Ta,coeffs[0:20])
         # Plot_Ta(miu,Ta,coeffs)
     # coeffs
         # print (covars)
+
+        df = pd.DataFrame(covars)       
+        filename = f'covars_matrix_pj{pj:02d}_ch{ch:02d}.csv'
+        df.to_csv(filename, index=False)
+
+
+        dc = pd.DataFrame(coeffs)       
+        filename = f'coeffs_bn_pj{pj:02d}_ch{ch:02d}.csv'
+        dc.to_csv(filename, index=False)        
