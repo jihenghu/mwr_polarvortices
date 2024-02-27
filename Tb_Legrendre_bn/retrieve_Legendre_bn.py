@@ -28,7 +28,7 @@ def Legendre_Polynomials(x, *coeffs):
 def Ta_func(x, *coeffs):
     result = np.zeros_like(x)
     for i, coeff in enumerate(coeffs):
-        result += coeff * legendre(i)(x) *AN[i]*2.*np.pi/(2*i+1.)#+ 0.5*coeff*coeff
+        result += coeff * legendre(i)(x) *AN[i]*2.*np.pi/(2*i+1.)
     return result
 
 def extract_Ta():
@@ -36,37 +36,6 @@ def extract_Ta():
     TA_file=h5py.File(f"../Ta_mu_pairs/Ta_mu_pairs_ch{ch+1:02d}_pj{pj:02d}.h5","r")
     Ta=TA_file['Ta'][:]
     miu=TA_file['miu'][:]
-
-def Plot(mu,data):
-    fig, axes = plt.subplots(ncols=2,nrows=1,figsize=(20, 10))
-    ax=axes[0]
-    ax.plot(mu, data, c='red' ,label="Legendre expansion of Beam")
-    ax.set_yscale('log')
-    ax.legend(fontsize=16)
-    ax.set_xlabel(f'$\mu$',fontsize=20)
-    ax.set_ylabel(f'$G(\mu)$',fontsize=20)
-    ax.set_xlim(1,-1)
-    # ax.set_ylim(1E-100,1)
-    ax.set_xticks([1.0,0.8,0.6,0.4,0.2,0.0,-0.2,-0.4,-0.6,-0.8,-1.0])
-    ax.set_xticklabels([1.0,0.8,0.6,0.4,0.2,0.0,-0.2,-0.4,-0.6,-0.8,-1.0],fontsize=16)
-    ax.set_yticks([1E0,1E-1,1E-2,1E-3,1E-4,1E-5,1E-6,1E-7])
-    ax.set_yticklabels([1,'$10^{-1}$','$10^{-2}$','$10^{-3}$','$10^{-4}$','$10^{-5}$','$10^{-6}$','$10^{-7}$'],fontsize=16)
-    ax.grid()
-    ax.set_title(f'a. Gain pattern CH{ch+1:02d}',fontsize=25,loc="left")
-    
-    ax = axes[1]
-    x_pos = np.arange(len(AN))
-    width = 0.4
-    h = ax.bar(x_pos,AN, width=width,facecolor='orange',edgecolor='k')#,label='Coefficents of Legendre Polynomials') 
-    # ax.legend(fontsize=16)
-    ax.set_xlabel(f'Order of Legendre Polynomials',fontsize=20)
-    ax.set_ylabel(f'Coefficents',fontsize=20)
-    ax.set_xlim(-2,41)
-    ax.set_xticks([0,5,10,15,20,25,30,35,40])
-    ax.set_xticklabels([0,5,10,15,20,25,30,35,40],fontsize=16)
-    ax.grid()
-    ax.set_title(f'b. Normalized Coefficents, $a_n$',fontsize=25,loc="left")
-    fig.savefig(f"Beam_legendre_ch{ch+1:02d}.png",dpi=300)
 
 def Plot_Ta(mu,data,coeffs):
     fig, axes = plt.subplots(ncols=2,nrows=2,figsize=(20, 20))
@@ -87,7 +56,7 @@ def Plot_Ta(mu,data,coeffs):
     ax.set_xticks([1.0,0.8,0.6,0.4,0.2,0.0,-0.2,-0.4,-0.6,-0.8,-1.0])
     ax.set_xticklabels([1.0,0.8,0.6,0.4,0.2,0.0,-0.2,-0.4,-0.6,-0.8,-1.0],fontsize=16)
     # ax.set_yticks([1E0,1E-1,1E-2,1E-3,1E-4,1E-5,1E-6,1E-7])
-    # ax.set_yticklabels([1,'$10^{-1}$','$10^{-2}$','$10^{-3}$','$10^{-4}$','$10^{-5}$','$10^{-6}$','$10^{-7}$'],fontsize=16)
+    # ax.set_yticklabels([],fontsize=16)
     ax.grid()
     ax.set_title(f'a. Ta CH{ch+1:02d}',fontsize=25,loc="left")
 
@@ -95,7 +64,8 @@ def Plot_Ta(mu,data,coeffs):
     ax = axes[0,1]
     x_pos = np.arange(len(coeffs))
     width = 0.4
-    h = ax.bar(x_pos,coeffs, width=width,facecolor='orange',edgecolor='k')#,label='Coefficents of Legendre Polynomials') 
+    h = ax.bar(x_pos,coeffs, width=width,facecolor='orange',edgecolor='k',alpha=0.5,label='Bn') 
+    h1 = ax.bar(x_pos,AN[:len(coeffs)], width=width,facecolor='Blue',edgecolor='k',alpha=0.5,label='An') 
     # ax.legend(fontsize=16)
     ax.set_xlabel(f'Order of Legendre Polynomials',fontsize=20)
     ax.set_ylabel(f'Coefficents',fontsize=20)
@@ -114,7 +84,6 @@ def Plot_Ta(mu,data,coeffs):
 
 
     ax = axes[1,1]
-
     elevation_angles = np.linspace(0, 90, 91)
     mu0=np.cos(elevation_angles/180.*np.pi)  ## 1 -> -1
     ax.plot(mu0, Legendre_Polynomials(mu0, *coeffs), c='blue' ,label="Legendre expansion")
@@ -156,36 +125,36 @@ if __name__=="__main__":
         ord=40
         LoadBeamLegrendreAn(ch)
 
+        print(AN)
+
         elevation_angles = np.linspace(0, 180, 181)
         mu=np.cos(elevation_angles/180.*np.pi)  ## 1 -> -1
 
         ## construct Bean pattern of function of polar angle or emission angle
         pattern_expansion=Legendre_Polynomials(mu,*AN)
 
-        ## plot the Beam curve
-        # Plot(mu,pattern_expansion)
         
         ## extract Ta
         extract_Ta()
         
         Ta1=Ta
         miu1=-miu
-        print(len(Ta))
+        # print(len(Ta))
         Ta=np.append(Ta,Ta1)
         miu=np.append(miu,miu1)
         # print(len(Ta))
-        print(miu)
+        # print(miu)
 
         Ta,miu=sort_mu_with_Ta(Ta,miu)
 
 
 
         ## Legendre expansion of Ta
-        initial_guess = [1.0] * ord  # Initial guess for coefficients TO 20TH ORDER
-        # coeffs, _ = curve_fit(Legendre_Polynomials, miu, Ta, p0=initial_guess)
-        coeffs, _ = curve_fit(Ta_func, miu, Ta, p0=initial_guess)
+        initial_guess = np.float64([1.0] * ord)  # Initial guess for coefficients TO 20TH ORDER
+        # coeffs, covars = curve_fit(Legendre_Polynomials, miu, Ta, p0=initial_guess)
+        coeffs, covars = curve_fit(Ta_func, np.float64(miu), np.float64(Ta), p0=initial_guess)
 
         Plot_Ta(miu,Ta,coeffs[0:20])
-        # Plot_Ta(miu,Ta,coeffs[0:20])
+        # Plot_Ta(miu,Ta,coeffs)
     # coeffs
-        print (coeffs)
+        # print (covars)
