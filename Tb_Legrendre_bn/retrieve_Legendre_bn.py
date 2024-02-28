@@ -183,11 +183,11 @@ if __name__=="__main__":
     # coeffs
         # print (covars)
 
-        df = pd.DataFrame(covars)       
-        filename = f'covars_matrix_pj{pj:02d}_ch{ch:02d}.csv'
+        df = pd.DataFrame(np.diag(covars))       
+        filename = f'variance_pj{pj:02d}_ch{ch+1:02d}.csv'
         df.to_csv(filename, index=False)
 
 
         dc = pd.DataFrame(coeffs)       
-        filename = f'coeffs_bn_pj{pj:02d}_ch{ch:02d}.csv'
+        filename = f'coeffs_bn_pj{pj:02d}_ch{ch+1:02d}.csv'
         dc.to_csv(filename, index=False)        
